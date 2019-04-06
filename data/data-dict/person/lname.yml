@@ -1,0 +1,6 @@
+name: lname
+domain: addressbook
+table: person
+desc: Last Name of person
+type: string
+len: 50

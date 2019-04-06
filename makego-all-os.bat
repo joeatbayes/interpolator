@@ -1,17 +1,23 @@
+
 set GOPATH=%cd%
 
 go get -u "github.com/joeatbayes/goutil/jutil"
 
 
+set GOOS=darwin
+set GOARCH=386
+go build -o interpolate-darwin-386 interpolate/interpolate.go 
 
-$ for GOOS in darwin linux windows solaris; do
-    for GOARCH in 386 amd64; do
-        go build interpolate/interpolate.go -v -o interpolate-$GOOS-$GOARCH
-    done
-done
 
-$ for GOOS in solaris; do
-    for GOARCH in sparc sparc64 386 amd64; do
-        go build interpolate/interpolate.go -v -o interpolate-$GOOS-$GOARCH
-    done
-done
+set GOOS=linux
+set GOARCH=386
+go build -o interpolate-linux-386 interpolate/interpolate.go 
+
+set GOOS=windows
+set GOARCH=386
+go build -o interpolate-windows-386 interpolate/interpolate.go 
+
+set GOOS=solaris
+set GOARCH=amd64
+go build -o interpolate-solaris-amd64 interpolate/interpolate.go 
+

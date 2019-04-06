@@ -7,7 +7,7 @@ Reads a text or markdown file and replaces defined values with contents from pre
 ### Sample Invocation
 
 ```
-interpolate  -in=data/sample-api.md -out=out/sample-api.md -baseDir=./data/dict  -defaulVarPath=desc  -keepPaths=true
+interpolate  -in=data/sample-api.md -out=out/sample-api.md -baseDir=./data/data-dict  -defaulVarPath=desc  -keepPaths=true
 ```
 
 * **-in** = path of a input file to process.  May be a specific file or a glob pattern.
@@ -33,16 +33,16 @@ uri: http://namesearch.com?fname=joe&lname=jackson&maxRec=389
 * fname= {person/fname}
 * lname= {person/lname}
 
-{inc:legal/copyright.txt}
+{inc:inc/legal/copyright.txt}
 ```
 
-* Any string contained inside of {} will be treated as a variable that needs to be resolved. 
+* Any string contained inside of {} will be treated as a variable that needs to be resolved.  When first character after { is *.    The * was used to make it easier to avoid parsing and attempted interpolation when sample JSON or other curly brace languages are part of input. 
 
   * The system will first attempt to match the defined variable name in parameters passed in on the command line.     
   * It will search for a file at the path starting at base dir and will attempt to load that file. 
   * Any pathname that includes a # segment will treat everything before the # as the file path and anything after it as a matching path to find a segment within the file.
   * When -defaultVarName is set the system will use it to search inside the file content for a specified field.     
-  * And value in {} that starts with https:// or http:// will be treated as a URI and the system will return any text returned from that URI in the output document. 
+  * Any lookup key value in {} that starts with https:// or http:// will be treated as a URI and the system will return any text returned from that URI in the output document. 
 
 * The system will always match the closest } whenever it encounters the opening {.  The closing } must not be separated by vertical white space such as /n.
 

@@ -1,0 +1,1 @@
+Generated files from command line sample are written in this directory

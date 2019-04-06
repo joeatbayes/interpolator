@@ -7,13 +7,14 @@ import (
 	//"bytes"
 	//"encoding/json"
 	"fmt"
-	//"io/ioutil"
+	"io/ioutil"
 	//"net/http"
 	"os"
 	//"path/filepath"
 	"regexp"
 	s "strings"
 	//"time"
+	"path/filepath"
 
 	"github.com/joeatbayes/goutil/jutil"
 )
@@ -24,6 +25,8 @@ type Interpolate struct {
 	inPath     string
 	processExt string // file name extension to use when processing directories.
 	start      float64
+	keepPaths  bool
+	baseDir    string
 }
 
 func makeInterpolator() *Interpolate {
@@ -37,7 +40,7 @@ func (r *Interpolate) elapSec() float64 {
 	return jutil.CalcElapSec(r.start)
 }
 
-var ParmMatch, ParmErr = regexp.Compile("\\{.*?\\}")
+var ParmMatch, ParmErr = regexp.Compile("\\{\\*.*?\\}")
 
 func (r *Interpolate) InterpolateStr(str string) string {
 	//fmt.Println("L246: Interpolate atr=", str)
@@ -53,20 +56,58 @@ func (r *Interpolate) InterpolateStr(str string) string {
 	last := 0
 	slen := len(str)
 	for _, m := range ms {
-		start, end := m[0]+1, m[1]-1
+		origStr := str[m[0]:m[1]]
+		start, end := m[0]+2, m[1]-1
 		//fmt.Printf("m[0]=%d m[1]=%d match = %q\n", m[0], m[1], str[start:end])
 		if start > last-1 {
 			// add the string before the match to the buffer
-			sb = append(sb, str[last:start-1])
+			sb = append(sb, str[last:start-2])
 		}
 		aMatchStr := s.ToLower(str[start:end])
-		// substitute match string with parms value
-		// or add it back in with the {} protecting it
-		// TODO: Add lookup from enviornment variable
-		//  if do not find it in the command line parms
-		lookVal := r.pargs.Sval(s.ToLower(aMatchStr), "{"+aMatchStr+"}")
-		//fmt.Printf("matchStr=%s  lookVal=%s\n", aMatchStr, lookVal)
-		sb = append(sb, lookVal)
+		fmt.Printf("L64: matchStr=%s original=%s\n", aMatchStr, origStr)
+		if s.HasPrefix(aMatchStr, "inc:") {
+			// Process simple file include
+			//fmt.Println("L69:found inc: prefix")
+			matchPort := s.TrimSpace(aMatchStr[4:])
+			tpath := filepath.Join(r.baseDir, matchPort)
+			//fmt.Println("L71: matchPort=", matchPort, " tpath=", tpath)
+			if jutil.Exists(tpath) {
+				data, err := ioutil.ReadFile(tpath)
+				if err != nil {
+					fmt.Println("Error reading ", tpath, " err=", err)
+					// could not read file so copy original path
+					// into output file
+					sb = append(sb, origStr)
+				} else {
+					// save file read into our output buffer
+					sb = append(sb, string(data))
+				}
+			} else {
+				sb = append(sb, origStr)
+				// file to include not located.
+			}
+
+		} else if s.HasPrefix(aMatchStr, "http:") || s.HasPrefix(aMatchStr, "https:") {
+			// Process as a URI to read
+
+		} else if r.pargs.Exists(aMatchStr) {
+			// substitute match string with parms value
+			// or add it back in with the {} protecting it
+			// TODO: Add lookup from enviornment variable
+			//  if do not find it in the command line parms
+			lookVal := r.pargs.Sval(aMatchStr, origStr) // "{*"+aMatchStr+"}")
+			//fmt.Printf("L99: matchStr=%s  lookVal=%s\n", aMatchStr, lookVal)
+			if r.keepPaths {
+				sb = append(sb, "*"+aMatchStr+"* ")
+			}
+			sb = append(sb, lookVal)
+
+		} else {
+			// Try read file and parse out the requested variable name
+			//
+
+			sb = append(sb, aMatchStr)
+		}
 		last = end + 1
 	}
 	if last < slen-1 {
@@ -100,14 +141,13 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 		fmt.Println("error opening input file ", inFiName, " err=", err)
 		os.Exit(3)
 	}
+	defer inFile.Close()
 
 	outFile, sferr := os.Create(outFiName)
 	if sferr != nil {
 		fmt.Println("Can not open out file ", outFiName, " sferr=", sferr)
 		os.Exit(3)
 	}
-
-	defer inFile.Close()
 	defer outFile.Close()
 
 	scanner := bufio.NewScanner(inFile)
@@ -119,9 +159,11 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 			continue
 		} else {
 			outStr := u.InterpolateStr(aline)
-			fmt.Println(outFile, outStr)
+			fmt.Println("L160: outStr=", outStr)
+			fmt.Fprintln(outFile, outStr)
 		}
 	}
+	outFile.Sync()
 }
 
 func main() {
@@ -140,6 +182,13 @@ func main() {
 	fmt.Println("OutFileName=", outFiName)
 
 	u.pargs = parms
+	u.baseDir = s.TrimSpace(parms.Sval("basedir", "data/data-dict/"))
+	if jutil.IsDirectory(u.baseDir) == false {
+		fmt.Println("baseDir ", u.baseDir, " must be a directory")
+		os.Exit(3)
+	}
+
+	u.keepPaths = parms.Bval("keeppaths", false)
 	u.processFile(inFiName, outFiName)
 	jutil.Elap("L382: Finished Run", startms, jutil.Nowms())
 }
