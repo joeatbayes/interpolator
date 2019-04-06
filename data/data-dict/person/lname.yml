@@ -2,5 +2,6 @@ name: lname
 domain: addressbook
 table: person
 desc: Last Name of person
+tech_desc: Last Name of person stored in addressbook.table.person.lname in primary oracle database. Must Match legal name as shown on drivers license or passport.
 type: string
 len: 50

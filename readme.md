@@ -15,7 +15,7 @@ interpolate  -in=data/sample-api.md -out=out/sample-api.md -baseDir=./data/data-
 * **-out** = Location to write the output file once expanded
 * **-baseDir** = Directory Base to search for files named in interpolated parameters.
 
-* **-defaultVarPath** = string matched in predefined file to pull next string. 
+* **-varPaths** = Default variable name  matched in dictionary files.  Can be overridden if variable name is specified using #varname semantic.    May be common separated list to allow default lookup of backup fields such as look first in tech_desc then in desc.
 
 * **-keepPaths** = when set to true it will keep the supplied path as part of output text.   When not set or false will replace content of path with content.
 
@@ -25,15 +25,21 @@ interpolate  -in=data/sample-api.md -out=out/sample-api.md -baseDir=./data/data-
 
 ## Sample Input
 
+[sample-api.md](data/sample-api.md)
+
 ```markdown
-= Name Search =
-uri: http://namesearch.com?fname=joe&lname=jackson&maxRec=389
+# Name Search
 
-* maxRec={maxrecmaxRec}
-* fname= {person/fname}
-* lname= {person/lname}
+**path**: addrBook/search
 
-{inc:inc/legal/copyright.txt}
+**sample uri**: http://namesearch.com/addrBook/search?fname=joe&lname=jackson&maxRec=389
+
+* **maxRec**={*maxRec}
+* **fname**= {*person/fname}
+* **lname**= {*person/lname#tech_desc}
+  * **Type**={*person/lname#type}  **len**={*person/lname#len}
+
+{*inc: inc/legal/copyright.txt}
 ```
 
 * Any string contained inside of {} will be treated as a variable that needs to be resolved.  When first character after { is *.    The * was used to make it easier to avoid parsing and attempted interpolation when sample JSON or other curly brace languages are part of input. 
@@ -58,7 +64,7 @@ uri: http://namesearch.com?fname=joe&lname=jackson&maxRec=389
 
 ## Sample Data Dictionary LOOKUP
 
-**person/fname.yml**
+**[person/fname.yml](data/data-dict/person/fname.yml)**
 
 ```
 name: fname
@@ -69,7 +75,7 @@ type: string
 len: 50
 ```
 
-**person/lname.yml**
+**[person/lname.yml](data/data-dict/person/lname.yml)**
 
 ```
 name: lname
@@ -80,7 +86,7 @@ type: string
 len: 50
 ```
 
-**legal/copyright.txt**
+**[legal/copyright.txt](data/data-dict/share/legal/copyright.txt)**
 
 ```
 (C) Copyright Joseph Ellsworth Mar-2019
@@ -115,4 +121,35 @@ HINT: set GOTPATH= your current working directory.  Or set it to your desired ta
 ```
 git clone https://github.com/joeatbayes/interpolator interpolate
 ```
+
+### To Build for Multiple OS Linux / Windows / Mac 
+
+[make-go-all-os.bat](make-go-all-os.bat): Batch file to build executable for multiple OS.  runs on windows 
+
+#### Windows example to build for other OS 
+
+```bash
+set GOPATH=%cd%
+
+go get -u "github.com/joeatbayes/goutil/jutil"
+
+set GOOS=darwin
+set GOARCH=386
+go build -o interpolate-darwin-386 interpolate/interpolate.go 
+
+set GOOS=linux
+set GOARCH=386
+go build -o interpolate-linux-386 interpolate/interpolate.go 
+
+set GOOS=windows
+set GOARCH=386
+go build -o interpolate-windows-386 interpolate/interpolate.go 
+
+set GOOS=solaris
+set GOARCH=amd64
+go build -o interpolate-solaris-amd64 interpolate/interpolate.go 
+
+```
+
+
 

@@ -27,6 +27,7 @@ type Interpolate struct {
 	start      float64
 	keepPaths  bool
 	baseDir    string
+	varPaths   []string
 }
 
 func makeInterpolator() *Interpolate {
@@ -40,7 +41,26 @@ func (r *Interpolate) elapSec() float64 {
 	return jutil.CalcElapSec(r.start)
 }
 
-var ParmMatch, ParmErr = regexp.Compile("\\{\\*.*?\\}")
+// Pattern used to find values we are interpolating
+var ParmMatch, ParmErr = regexp.Compile(`\{\*.*?\}`)
+
+// Pattern used to find any named tag in yml
+var MatchAnyTag, perr2 = regexp.Compile(`^\s*\w*?\:`)
+
+func (r *Interpolate) GetFieldSingle(data []byte, specPath string) string {
+	rePatt := `^\s*?` + specPath + `\:`
+	lookPat, parmErr := regexp.Compile(rePatt)
+	m := lookPat.FindIndex([]byte(data))
+	start, end := m[0]+2, m[1]-1
+	fmt.Println("rePatt=", rePatt, " parmErr=", parmErr, " start=", start, " end=", end)
+	return ""
+}
+
+// parse input data as a file and attempt to extract the content
+// for a specific field.
+func (r *Interpolate) GetField(data []byte, specPath string, defPaths []string) string {
+	return ""
+}
 
 func (r *Interpolate) InterpolateStr(str string) string {
 	//fmt.Println("L246: Interpolate atr=", str)
@@ -80,7 +100,7 @@ func (r *Interpolate) InterpolateStr(str string) string {
 					sb = append(sb, origStr)
 				} else {
 					// save file read into our output buffer
-					sb = append(sb, string(data))
+					sb = append(sb, r.InterpolateStr(string(data)))
 				}
 			} else {
 				sb = append(sb, origStr)
@@ -100,13 +120,29 @@ func (r *Interpolate) InterpolateStr(str string) string {
 			if r.keepPaths {
 				sb = append(sb, "*"+aMatchStr+"* ")
 			}
-			sb = append(sb, lookVal)
+			sb = append(sb, r.InterpolateStr(lookVal))
 
 		} else {
 			// Try read file and parse out the requested variable name
-			//
-
-			sb = append(sb, aMatchStr)
+			specPath := ""
+			pathFrag := s.SplitN(aMatchStr, "#", 2)
+			basicPath := s.TrimSpace(pathFrag[1])
+			if len(pathFrag) == 2 {
+				specPath = pathFrag[1]
+			}
+			tpath := filepath.Join(r.baseDir, basicPath)
+			data, err := ioutil.ReadFile(tpath)
+			if err != nil {
+				fmt.Println("Error reading ", tpath, " err=", err)
+				// could not read file so copy original path
+				// into output file
+				sb = append(sb, origStr)
+			} else {
+				// save file read into our output buffer
+				extractStr := r.GetField(data, specPath, r.varPaths)
+				sb = append(sb, r.InterpolateStr(extractStr))
+			}
+			//sb = append(sb, aMatchStr)
 		}
 		last = end + 1
 	}
@@ -182,13 +218,14 @@ func main() {
 	fmt.Println("OutFileName=", outFiName)
 
 	u.pargs = parms
+	u.keepPaths = parms.Bval("keeppaths", false)
+	u.varPaths = s.Split(parms.Sval("varpaths", "desc"), ",")
 	u.baseDir = s.TrimSpace(parms.Sval("basedir", "data/data-dict/"))
 	if jutil.IsDirectory(u.baseDir) == false {
-		fmt.Println("baseDir ", u.baseDir, " must be a directory")
+		fmt.Println("L191: FATAL ERROR: baseDir ", u.baseDir, " must be a directory")
 		os.Exit(3)
 	}
 
-	u.keepPaths = parms.Bval("keeppaths", false)
 	u.processFile(inFiName, outFiName)
 	jutil.Elap("L382: Finished Run", startms, jutil.Nowms())
 }
