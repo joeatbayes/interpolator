@@ -17,6 +17,8 @@ import (
 	"path/filepath"
 
 	"github.com/joeatbayes/goutil/jutil"
+	"github.com/shurcooL/github_flavored_markdown"
+	//"gopkg.in/russross/blackfriday.v2"
 )
 
 type Interpolate struct {
@@ -217,6 +219,32 @@ func PrintHelp() {
 	-`)
 }
 
+func (u *Interpolate) saveAsHTML(srcFile string) {
+	// Save File as HTML if the HTML save directory
+	// has been specified.
+	fext := filepath.Ext(srcFile)
+	fmt.Println("L226: fext=", fext, "u.saveHtml=", u.saveHtml)
+	if u.saveHtml && fext == ".md" {
+		data, err := ioutil.ReadFile(srcFile)
+		fmt.Println("L229: fname=", srcFile, "data=", string(data))
+		if err != nil {
+			fmt.Println("L260: Error reading ", srcFile, " err=", err)
+		} else {
+			hname := s.Replace(srcFile, ".md", ".html", 1)
+			fmt.Println("L234: html filename=", hname)
+			f, err := os.Create(hname)
+			if err != nil {
+				fmt.Println("error writing to ", hname, " err=", err)
+			} else {
+				f.WriteString(`<html><head><meta charset="utf-8"></head><body><article class="markdown-body entry-content" style="padding: 30px;">`)
+				f.Write(github_flavored_markdown.Markdown(data))
+				f.WriteString(`</article></body></html>`)
+				f.Close()
+			}
+		}
+	}
+}
+
 // Process a single input file
 func (u *Interpolate) processFile(inFiName string, outFiName string) {
 	inFile, err := os.Open(inFiName)
@@ -247,12 +275,7 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 	}
 	outFile.Sync()
 	outFile.Close()
-
-	// Save File as HTML if the HTML save directory
-	// has been specified.
-	if u.saveHtml && filepath.Ext(outFiName) == "md" {
-
-	}
+	u.saveAsHTML(outFiName)
 }
 
 // Process a single input file
@@ -296,8 +319,8 @@ func main() {
 	u.varPaths = s.Split(parms.Sval("varnames", "desc"), ",")
 	u.baseDir = s.TrimSpace(parms.Sval("search", "data/data-dict/"))
 	u.saveHtml = parms.Bval("savehtml", false)
-
 	jutil.EnsurDir(outName)
+	fmt.Println("u=", u, "saveHtml=", u.saveHtml)
 
 	if jutil.IsDirectory(u.baseDir) == false {
 		fmt.Println("L191: FATAL ERROR: baseDir ", u.baseDir, " must be a directory")

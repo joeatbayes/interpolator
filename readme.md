@@ -20,6 +20,14 @@ interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNa
 
 
 
+#### Saving md files converted to HTML
+
+interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99 -saveHtml=yes
+
+Adding the -saveHtml=yes will cause the system to re-read the expanded markup and write a HTML version. 
+
+
+
 # Data Format API
 
 ## Sample Input
