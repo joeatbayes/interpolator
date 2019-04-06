@@ -14,3 +14,7 @@
 *.log.txt
 pkg*
 src/github.com/*
+interpolate-darwin-386
+interpolate-linux-386
+interpolate-solaris-amd64
+interpolate-windows-386
