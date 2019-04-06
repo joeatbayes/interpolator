@@ -14,4 +14,6 @@ type: string
 len: 50
 * **Type**= string
 len: 50  **len**= 50
-{*inc: inc/legal/copyright.txt}
+(C) Copyright Joseph Ellsworth Mar-2019
+MIT License: https://opensource.org/licenses/MIT
+Contact me on linkedin: https://www.linkedin.com/in/joe-ellsworth-68222/

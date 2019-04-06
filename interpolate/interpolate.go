@@ -62,13 +62,13 @@ func (r *Interpolate) GetFieldSingle(data []byte, specPath string) string {
 		fmt.Println("L62: rePatt=", rePatt, " parmErr=", parmErr, " start=", start, " end=", end)
 		remaining := data[end:]
 		mrest := MatchAnyTag.FindIndex(remaining)
-		fmt.Println("L65: mrest=", mrest, " remaining=\n", string(remaining), "\n\n\n")
+		//fmt.Println("L65: mrest=", mrest, " remaining=\n", string(remaining), "\n\n\n")
 		if mrest == nil {
 			return string(remaining)
 		} else {
 			restStart := mrest[0]
 			varMatch := string(remaining[0:restStart])
-			fmt.Println("L71: varMatch=", varMatch)
+			//fmt.Println("L71: varMatch=", varMatch)
 			return varMatch
 		}
 	}
@@ -128,12 +128,13 @@ func (r *Interpolate) InterpolateStr(str string) string {
 			if jutil.Exists(tpath) {
 				data, err := ioutil.ReadFile(tpath)
 				if err != nil {
-					fmt.Println("Error reading ", tpath, " err=", err)
+					//fmt.Println("Error reading ", tpath, " err=", err)
 					// could not read file so copy original path
 					// into output file
 					sb = append(sb, origStr)
 				} else {
 					// save file read into our output buffer
+					//fmt.Println("L137 Add file from buffer data=\n", string(data), "\n\n")
 					sb = append(sb, r.InterpolateStr(string(data)))
 				}
 			} else {

@@ -9,5 +9,5 @@
 * **lname**= {*person/lname#tech_desc}
   * **Type**={*person/lname#type}  **len**={*person/lname#len}
 
-{*inc: inc/legal/copyright.txt}
+{*inc: share/legal/copyright.txt}
 
