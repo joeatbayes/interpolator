@@ -7,17 +7,16 @@ Reads a text or markdown file and replaces defined values with contents from pre
 ### Sample Invocation
 
 ```
-interpolate  -in=data/sample-api.md -out=out/sample-api.md -baseDir=./data/data-dict  -VarPaths=desc,tech_desc  -keepPaths=true -maxRec=99
+interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99
 ```
 
-* **-in** = path of a input file to process.  May be a specific file or a glob pattern.
-
-* **-out** = Location to write the output file once expanded
-* **-baseDir** = Directory Base to search for files named in interpolated parameters.
-
-* **-varPaths** = Default variable name  matched in dictionary files.  Can be overridden if variable name is specified using #varname semantic.    May be common separated list to allow default lookup of backup fields such as look first in tech_desc then in desc.
-
-* **-keepPaths** = when set to true it will keep the supplied path as part of output text.   When not set or false will replace content of path with content.
+* **-in** = path to input directory containing files to process .  Defaults to ./data
+* **-out** = path to output directory where expanded files will be written.   defaults to ./out
+* **-glob**= glob pattern to use when selecting files to process in input directory.  Defaults to *.md
+* **-search** = Directory Base to search for files named in interpolated parameters.
+* **-varNames** = Default variable name  matched in dictionary files.  Can be overridden if variable name is specified using #varname semantic.    May be common separated list to allow default lookup of backup fields such as look first in tech_desc then in desc.
+* **-keepNames** = when set to true it will keep the supplied path as part of output text.   When not set or false will replace content of path with content.
+* **-saveHtml**= when set to yes will convert the md file to Html and save it in the output directory. 
 
 
 

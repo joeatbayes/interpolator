@@ -23,11 +23,14 @@ type Interpolate struct {
 	perf       *jutil.PerfMeasure
 	pargs      *jutil.ParsedCommandArgs
 	inPath     string
+	outPath    string
+	glob       string
 	processExt string // file name extension to use when processing directories.
 	start      float64
 	keepPaths  bool
 	baseDir    string
 	varPaths   []string
+	saveHtml   bool
 }
 
 func makeInterpolator() *Interpolate {
@@ -228,7 +231,6 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 		fmt.Println("Can not open out file ", outFiName, " sferr=", sferr)
 		os.Exit(3)
 	}
-	defer outFile.Close()
 
 	scanner := bufio.NewScanner(inFile)
 	//var b bytes.Buffer
@@ -244,32 +246,64 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 		}
 	}
 	outFile.Sync()
+	outFile.Close()
+
+	// Save File as HTML if the HTML save directory
+	// has been specified.
+	if u.saveHtml && filepath.Ext(outFiName) == "md" {
+
+	}
+}
+
+// Process a single input file
+func (u *Interpolate) processDir(inDirName string, outDirName string) {
+	globPath := inDirName + "/*" + u.glob
+	fmt.Println("L259: globPath=", globPath)
+	files, err := filepath.Glob(globPath)
+	if err != nil {
+		fmt.Println("L289: ERROR processsing dir=", inDirName, " outDir=", outDirName, "globPath=", globPath, " err=", err)
+	} else {
+		fmt.Println("L264: files=", files)
+		for _, fiPath := range files {
+
+			fmt.Println("L301:  fiPath=", fiPath)
+			dir, fname := filepath.Split(fiPath)
+			fmt.Println("L271: fiPath=", fiPath, "dir=", dir, "fname=", fname)
+			outName := filepath.Join(outDirName, fname)
+			u.processFile(fiPath, outName)
+		}
+	}
 }
 
 func main() {
 	startms := jutil.Nowms()
-	const DefInFiName = "data/sample.tst"
-	const DefOutFiName = "out/sample.txt"
+	const DefIn = "data"
+	const DefOut = "out"
 	parms := jutil.ParseCommandLine(os.Args)
 	if parms.Exists("help") {
 		PrintHelp()
 		return
 	}
 	fmt.Println(parms.String())
-	inFiName := parms.Sval("in", DefInFiName)
-	outFiName := parms.Sval("out", DefOutFiName)
+	inName := parms.Sval("in", DefIn)
+	outName := parms.Sval("out", DefOut)
 	u := makeInterpolator()
-	fmt.Println("OutFileName=", outFiName)
+	fmt.Println("OutName=", outName)
 
 	u.pargs = parms
-	u.keepPaths = parms.Bval("keeppaths", false)
-	u.varPaths = s.Split(parms.Sval("varpaths", "desc"), ",")
-	u.baseDir = s.TrimSpace(parms.Sval("basedir", "data/data-dict/"))
+	u.glob = parms.Sval("glob", "*.md")
+	u.keepPaths = parms.Bval("keepnames", false)
+	u.varPaths = s.Split(parms.Sval("varnames", "desc"), ",")
+	u.baseDir = s.TrimSpace(parms.Sval("search", "data/data-dict/"))
+	u.saveHtml = parms.Bval("savehtml", false)
+
+	jutil.EnsurDir(outName)
+
 	if jutil.IsDirectory(u.baseDir) == false {
 		fmt.Println("L191: FATAL ERROR: baseDir ", u.baseDir, " must be a directory")
 		os.Exit(3)
 	}
 
-	u.processFile(inFiName, outFiName)
+	u.processDir(inName, outName)
 	jutil.Elap("L382: Finished Run", startms, jutil.Nowms())
 }
