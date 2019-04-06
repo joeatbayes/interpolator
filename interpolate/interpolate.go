@@ -47,19 +47,51 @@ var ParmMatch, ParmErr = regexp.Compile(`\{\*.*?\}`)
 // Pattern used to find any named tag in yml
 var MatchAnyTag, perr2 = regexp.Compile(`^\s*\w*?\:`)
 
+// find index of the matching field and then take text until
+// we find the next tag indicating starting next element.
+// or hit the end of string.
 func (r *Interpolate) GetFieldSingle(data []byte, specPath string) string {
-	rePatt := `^\s*?` + specPath + `\:`
+	rePatt := `\s*` + specPath + `\:`
 	lookPat, parmErr := regexp.Compile(rePatt)
 	m := lookPat.FindIndex([]byte(data))
-	start, end := m[0]+2, m[1]-1
-	fmt.Println("rePatt=", rePatt, " parmErr=", parmErr, " start=", start, " end=", end)
-	return ""
+	fmt.Println("L57: specPath=", specPath, " rePatt=", rePatt, " parmErr=", parmErr, " m=", m, " data=\n", string(data), "\n\n")
+	if m == nil {
+		return ""
+	} else {
+		start, end := m[0]+2, m[1]-1
+		fmt.Println("L62: rePatt=", rePatt, " parmErr=", parmErr, " start=", start, " end=", end)
+		remaining := data[end:]
+		mrest := MatchAnyTag.FindIndex(remaining)
+		fmt.Println("L65: mrest=", mrest, " remaining=\n", string(remaining), "\n\n\n")
+		if mrest == nil {
+			return string(remaining)
+		} else {
+			restStart := mrest[0]
+			return string(remaining[0:restStart])
+		}
+	}
 }
 
 // parse input data as a file and attempt to extract the content
-// for a specific field.
+// for a specific field.   Tries to find the requested field first
+// then works through options until it finds a match or runs out
 func (r *Interpolate) GetField(data []byte, specPath string, defPaths []string) string {
-	return ""
+	// When a field is specified it must be matched with
+	// no fallback.
+	if specPath > " " {
+		return r.GetFieldSingle(data, specPath)
+	}
+
+	// try the default paths in order specified
+	if len(defPaths) > 0 {
+		for _, tmpVar := range defPaths {
+			tres := r.GetFieldSingle(data, tmpVar)
+			if tres > " " {
+				return tres
+			}
+		}
+	}
+	return " "
 }
 
 func (r *Interpolate) InterpolateStr(str string) string {
@@ -124,23 +156,32 @@ func (r *Interpolate) InterpolateStr(str string) string {
 
 		} else {
 			// Try read file and parse out the requested variable name
-			specPath := ""
+			varSpecPath := ""
 			pathFrag := s.SplitN(aMatchStr, "#", 2)
-			basicPath := s.TrimSpace(pathFrag[1])
+			basicPath := s.TrimSpace(pathFrag[0])
 			if len(pathFrag) == 2 {
-				specPath = pathFrag[1]
+				varSpecPath = pathFrag[1]
 			}
-			tpath := filepath.Join(r.baseDir, basicPath)
+			tpath := filepath.Join(r.baseDir, basicPath) + ".yml"
+			tpath = s.Replace(tpath, ".yml.yml", ".yml", 1)
 			data, err := ioutil.ReadFile(tpath)
+			fmt.Println("L158: fname=", tpath, "data=", string(data))
 			if err != nil {
-				fmt.Println("Error reading ", tpath, " err=", err)
+				fmt.Println("L160: Error reading ", tpath, " err=", err)
 				// could not read file so copy original path
 				// into output file
 				sb = append(sb, origStr)
+				sb = append(sb, " *FILE NOT FOUND "+tpath+" *")
 			} else {
 				// save file read into our output buffer
-				extractStr := r.GetField(data, specPath, r.varPaths)
-				sb = append(sb, r.InterpolateStr(extractStr))
+				extractStr := r.GetField(data, varSpecPath, r.varPaths)
+				if extractStr > " " {
+					sb = append(sb, r.InterpolateStr(extractStr))
+				} else {
+					// Could not find a match so output default
+					sb = append(sb, origStr)
+					sb = append(sb, " *VARIABLE NOT FOUND* ")
+				}
 			}
 			//sb = append(sb, aMatchStr)
 		}

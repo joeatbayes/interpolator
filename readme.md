@@ -7,7 +7,7 @@ Reads a text or markdown file and replaces defined values with contents from pre
 ### Sample Invocation
 
 ```
-interpolate  -in=data/sample-api.md -out=out/sample-api.md -baseDir=./data/data-dict  -defaulVarPath=desc  -keepPaths=true
+interpolate  -in=data/sample-api.md -out=out/sample-api.md -baseDir=./data/data-dict  -VarPaths=desc,tech_desc  -keepPaths=true -maxRec=99
 ```
 
 * **-in** = path of a input file to process.  May be a specific file or a glob pattern.
