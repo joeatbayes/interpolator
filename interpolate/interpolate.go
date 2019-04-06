@@ -45,20 +45,20 @@ func (r *Interpolate) elapSec() float64 {
 var ParmMatch, ParmErr = regexp.Compile(`\{\*.*?\}`)
 
 // Pattern used to find any named tag in yml
-var MatchAnyTag, perr2 = regexp.Compile(`^\s*\w*?\:`)
+var MatchAnyTag, perr2 = regexp.Compile(`\v+\s*\w+?\:`)
 
 // find index of the matching field and then take text until
 // we find the next tag indicating starting next element.
 // or hit the end of string.
 func (r *Interpolate) GetFieldSingle(data []byte, specPath string) string {
-	rePatt := `\s*` + specPath + `\:`
+	rePatt := `\s*?` + specPath + `\:`
 	lookPat, parmErr := regexp.Compile(rePatt)
 	m := lookPat.FindIndex([]byte(data))
 	fmt.Println("L57: specPath=", specPath, " rePatt=", rePatt, " parmErr=", parmErr, " m=", m, " data=\n", string(data), "\n\n")
 	if m == nil {
 		return ""
 	} else {
-		start, end := m[0]+2, m[1]-1
+		start, end := m[0], m[1]
 		fmt.Println("L62: rePatt=", rePatt, " parmErr=", parmErr, " start=", start, " end=", end)
 		remaining := data[end:]
 		mrest := MatchAnyTag.FindIndex(remaining)
@@ -67,7 +67,9 @@ func (r *Interpolate) GetFieldSingle(data []byte, specPath string) string {
 			return string(remaining)
 		} else {
 			restStart := mrest[0]
-			return string(remaining[0:restStart])
+			varMatch := string(remaining[0:restStart])
+			fmt.Println("L71: varMatch=", varMatch)
+			return varMatch
 		}
 	}
 }

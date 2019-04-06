@@ -2,7 +2,16 @@
 **path**: addrBook/search
 **sample uri**: http://namesearch.com/addrBook/search?fname=joe&lname=jackson&maxRec=389
 * **maxRec**={*maxRec} *FILE NOT FOUND data\data-dict\maxrec.yml *
-* **fname**= {*person/fname} *VARIABLE NOT FOUND* 
-* **lname**= {*person/lname#tech_desc} *VARIABLE NOT FOUND* 
-* **Type**={*person/lname#type} *VARIABLE NOT FOUND*   **len**={*person/lname#len} *VARIABLE NOT FOUND* 
+* **fname**=  First name of person
+type: string
+len: 50
+* **lname**=  Last Name of person stored in addressbook.table.person.lname in primary oracle database. 
+  Must Match legal name as shown on drivers license or passport.
+  { 'person' : 
+    {'lname' : 'myname' } 
+  }
+type: string
+len: 50
+* **Type**= string
+len: 50  **len**= 50
 {*inc: inc/legal/copyright.txt}
