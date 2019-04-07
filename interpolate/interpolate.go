@@ -12,13 +12,14 @@ import (
 	//"net/http"
 	"os"
 	//"path/filepath"
-	m2h "mdtohtml"
+	//m2h "mdtohtml"
 	"path/filepath"
 	"regexp"
 	s "strings"
 	"time"
 
 	"github.com/joeatbayes/goutil/jutil"
+	m2h "github.com/joeatbayes/goutil/mdtohtml"
 )
 
 type Interpolate struct {
