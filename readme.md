@@ -2,7 +2,7 @@
 
 Reads a text or markdown file and replaces defined values with contents from previously defined content such as a dictionary or object definitions.    
 
-*  Aids in the production of consistent documentation when many fields are reused in different context across many API
+*  Aids in the production of consistent documentation when many fields are reused in different context across many API by interpolating descriptive text or other fields data directly from shared definitions.  Minimizes re-editing many files due to cut and paste.
 * Allows easy custom production versions useful  when the final published documentation may include internal technical descriptions or may need to be adjusted for public consumption by only including descriptions approved for external publishing.   
 * Encourages defining structures used by a multiple md API once and re-using them.    
 * Encourages creating of a data dictionary that is managed using source code workflow and interpolating selected content from yml files containing the dictionary to reduce the need to edit copy / paste when descriptions have been duplicated across many markdown files. 
