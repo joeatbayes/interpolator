@@ -508,5 +508,7 @@ func main() {
 			time.Sleep(time.Duration(u.loopDelay) * time.Second)
 			startms = jutil.Nowms()
 		}
+	} else {
+		u.processDir(inName, outName)
 	}
 }
