@@ -14,7 +14,9 @@ interpolate.exe
 *.out.txt
 *.log.txt
 pkg*
-src/github.com/*
+*/src/github.com/*
+*/src/golang.org
+*/src/gopkg.in
 xxinterpolate-darwin-386
 xxinterpolate-linux-386
 interpolate-solaris-amd64

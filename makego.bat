@@ -1,4 +1,4 @@
-set GOPATH=%cd%
+set GOPATH=%cd%/interpolate
 
 go get -u "github.com/joeatbayes/goutil/jutil"
 go get -u "github.com/shurcooL/github_flavored_markdown"

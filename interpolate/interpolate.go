@@ -12,153 +12,14 @@ import (
 	//"net/http"
 	"os"
 	//"path/filepath"
+	m2h "mdtohtml"
 	"path/filepath"
 	"regexp"
 	s "strings"
 	"time"
 
 	"github.com/joeatbayes/goutil/jutil"
-	"github.com/shurcooL/github_flavored_markdown"
-	//"gopkg.in/russross/blackfriday.v2"
 )
-
-var htmlPrefix = `
-  <html>
-    <head>
-	  <meta charset="utf-8">
-	<style>
-	
-body {
-    background-color: #FFF;
-    color: #172B4D;
-    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,"Fira Sans","Droid Sans","Helvetica Neue",sans-serif;
-    font-size: 14px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 1.42857142857143;
-    -ms-overflow-style: -ms-autohiding-scrollbar;
-    text-decoration-skip: ink;
-}
-	 p {
-    display: block;
-	magin-left: 1em;
-    margin-block-start: 1em;
-    margin-block-end: 1em;
-    margin-inline-start: 0px;
-    margin-inline-end: 0px;
-}
-
-h1 {
-    font-size: 1.74285714em;
-    font-style: inherit;
-    font-weight: 600;
-    line-height: 1.25;
-    letter-spacing: -.006em;
-    margin-top: 24px;
-    color: #172B4D;
-}
-
-h2 {
-    font-size: 1.52857143em;
-    font-style: inherit;
-    font-weight: 500;
-    letter-spacing: -.008em;
-    line-height: 1.2;
-    margin-top: 28px;
-    color: #172B4D;
-}
-
- h3 {
-    font-size: 1.34285714em;
-    font-style: inherit;
-    font-weight: 600;
-    line-height: 1.25;
-    letter-spacing: -.006em;
-    margin-top: 24px;
-    color: #172B4D;
-}
-
-h4 {
-    font-size: 1.1;
-    font-style: inherit;
-    font-weight: 500;
-    line-height: 1.25;
-    letter-spacing: -.006em;
-    margin-top: 24px;
-    color: #172B4D;
-}
-
-h5 {
-    font-size: 1.0;
-    font-style: inherit;
-    font-weight: 400;
-    line-height: 1.25;
-    letter-spacing: -.006em;
-    margin-top: 24px;
-    color: #172B4D;
-}
-
-
-pre {
-    background: #F4F5F7;
-    border: 1px solid #DFE1E6;
-    border-radius: 3px;
-    overflow-x: auto;
-    padding: 5px 10px;
-    word-wrap: normal;
-	font-family: monospace; 
-	font-size: 12px;
-	font-weight: 300;
-	
-}
-
-
-blockquote  {
-    margin: 12px 12px 12px 12px;
-	color: Green;
-	font-weight: 700;
-}
-
-a:link {
-  text-decoration: none;
-  color: blue;
-  font-weight: 500;
-}
-
-a:visited {
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-  font-weight: 550;
-}
-
-a:active {
-  text-decoration: underline;
-}
-
-	</style>
-    </head>
-	<body>
-	  <article class="markdown-body entry-content" style="padding: 30px;">
-  `
-
-var htmlJavscriptReload = `
-  <script>
-  function doReload(){   
-    location.reload(); 
-  }
-
-  setInterval(doReload, loopDelay);
-  </script>
-  `
-
-var htmlSuffix = `
-    </article>
-	</body>
-	</html>
-  `
 
 type Interpolate struct {
 	perf       *jutil.PerfMeasure
@@ -172,7 +33,7 @@ type Interpolate struct {
 	baseDir    string
 	varPaths   []string
 	saveHtml   bool
-	loopDelay  int
+	loopDelay  float32
 }
 
 func makeInterpolator() *Interpolate {
@@ -398,38 +259,6 @@ func PrintHelp() {
 	-`)
 }
 
-func (u *Interpolate) saveAsHTML(srcFile string) {
-	// Save File as HTML if the HTML save directory
-	// has been specified.
-	fext := filepath.Ext(srcFile)
-	fmt.Println("L226: fext=", fext, "u.saveHtml=", u.saveHtml)
-	if u.saveHtml && fext == ".md" {
-		data, err := ioutil.ReadFile(srcFile)
-		//fmt.Println("L229: fname=", srcFile, "data=", string(data))
-		if err != nil {
-			fmt.Println("L260: Error reading ", srcFile, " err=", err)
-		} else {
-			hname := s.Replace(srcFile, ".md", ".html", 1)
-			//fmt.Println("L234: html filename=", hname)
-			f, err := os.Create(hname)
-			if err != nil {
-				fmt.Println("error writing to ", hname, " err=", err)
-			} else {
-				f.WriteString(htmlPrefix)
-				if u.loopDelay > 0 {
-					delayStr := fmt.Sprintf("%f", float32(u.loopDelay)*1000)
-					//fmt.Println("L407: delayStr=", delayStr, "reloadStr=", htmlJavscriptReload)
-					tmp := s.Replace(string(htmlJavscriptReload), "loopDelay", delayStr, 1)
-					f.WriteString(tmp)
-				}
-				f.Write(github_flavored_markdown.Markdown(data))
-				f.WriteString(htmlSuffix)
-				f.Close()
-			}
-		}
-	}
-}
-
 // Process a single input file
 func (u *Interpolate) processFile(inFiName string, outFiName string) {
 	inFile, err := os.Open(inFiName)
@@ -462,7 +291,9 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 	}
 	outFile.Sync()
 	outFile.Close()
-	u.saveAsHTML(outFiName)
+	if u.saveHtml {
+		m2h.SaveAsHTML(outFiName, u.loopDelay)
+	}
 }
 
 // Process a single input file
@@ -506,7 +337,7 @@ func main() {
 	u.varPaths = s.Split(parms.Sval("varnames", "desc"), ",")
 	u.baseDir = s.TrimSpace(parms.Sval("search", "data/data-dict/"))
 	u.saveHtml = parms.Bval("savehtml", false)
-	u.loopDelay = parms.Ival("loopdelay", -1)
+	u.loopDelay = parms.Fval("loopdelay", -1)
 	jutil.EnsurDir(outName)
 	//fmt.Println("u=", u, "saveHtml=", u.saveHtml)
 

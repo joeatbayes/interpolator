@@ -1,4 +1,6 @@
+package mdtohtml
 
+var HtmlPrefix = `
   <html>
     <head>
 	  <meta charset="utf-8">
@@ -118,65 +120,20 @@ a:active {
     </head>
 	<body>
 	  <article class="markdown-body entry-content" style="padding: 30px;">
-  
+  `
+
+var HtmlJavscriptReload = `
   <script>
   function doReload(){   
     location.reload(); 
   }
 
-  setInterval(doReload, 3000.000000);
+  setInterval(doReload, loopDelay);
   </script>
-  <h1><a name="name-search" class="anchor" href="#name-search" rel="nofollow" aria-hidden="true"><span class="octicon octicon-link"></span></a>Name Search</h1>
+  `
 
-<p><strong>path</strong>: addrBook/search</p>
-
-<p><strong>sample uri</strong>: <a href="http://namesearch.com/addrBook/search?fname=joe&amp;lname=jackson&amp;maxRec=389" rel="nofollow">http://namesearch.com/addrBook/search?fname=joe&amp;lname=jackson&amp;maxRec=389</a></p>
-
-<ul>
-<li><strong>maxRec</strong>=99</li>
-
-<li><p><strong>fname</strong>=  First name of person</p></li>
-
-<li><p><strong>lname</strong>=  Last Name of person stored in addressbook.table.person.lname in primary oracle database.
-Must Match legal name as shown on drivers license or passport.</p>
-
-<pre><code>{ &#39;person&#39; : 
-{&#39;lname&#39; : &#39;myname&#39; } 
-}
-</code></pre></li>
-
-<li><p><strong>Type</strong>= string
-<strong>len</strong>= 50</p></li>
-</ul>
-<h2><a name="sample-output" class="anchor" href="#sample-output" rel="nofollow" aria-hidden="true"><span class="octicon octicon-link"></span></a>
-Sample Output</h2>
-
-<pre><code>  &#39;person&#39;: {
-    &#39;lname&#39;: &#39;Jimbo&#39;,
-    &#39;fname&#39;: &#39;Jackson&#39;,
-    &#39;colors&#39;: {
-       &#39;car&#39;: &#39;red&#39;,
-       &#39;boat&#39;: &#39;blue&#39;,
-       &#39;house&#39;: &#39;cream&#39;,
-       &#39;hair&#39;: &#39;brown&#39;,
-       &#39;cat&#39; : &#39;black and white spots&#39;
-    }
-  } 
-</code></pre>
-
-<ul>
-<li><strong>Colors</strong> - List of colors for various items this person owns.  Used to help predict which color they will like when purchasing other items.</li>
-</ul>
-<h2><a name="copyright" class="anchor" href="#copyright" rel="nofollow" aria-hidden="true"><span class="octicon octicon-link"></span></a>
-Copyright</h2>
-
-<p>(C) Copyright Joseph Ellsworth Mar-2019</p>
-
-<p>MIT License: <a href="https://opensource.org/licenses/MIT" rel="nofollow">https://opensource.org/licenses/MIT</a></p>
-
-<p>Contact me on linkedin: <a href="https://www.linkedin.com/in/joe-ellsworth-68222/" rel="nofollow">https://www.linkedin.com/in/joe-ellsworth-68222/</a></p>
-
+var HtmlSuffix = `
     </article>
 	</body>
 	</html>
-  
+  `
