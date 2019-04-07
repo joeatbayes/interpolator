@@ -2,12 +2,16 @@
 
 Reads a text or markdown file and replaces defined values with contents from previously defined content such as a dictionary or object definitions.    
 
-*  Aids in the production of consistent documentation when many fields are reused in different context across many API by interpolating descriptive text or other fields data directly from shared definitions.  Minimizes re-editing many files due to cut and paste.
-* Allows easy custom production versions useful  when the final published documentation may include internal technical descriptions or may need to be adjusted for public consumption by only including descriptions approved for external publishing.   
-* Encourages defining structures used by a multiple md API once and re-using them.    
-* Encourages creating of a data dictionary that is managed using source code workflow and interpolating selected content from yml files containing the dictionary to reduce the need to edit copy / paste when descriptions have been duplicated across many markdown files. 
-* Produces both expanded markdown and html files to allow easy viewing.
-* Supports html page auto reload and auto regeneration to easily show the results as markdown is edited.
+*  Aids in the production of consistent documentation when many fragments of content are reused in different context across many files by interpolating descriptive text or other field data directly from shared definitions.  
+   *  Minimizes re-editing many files due to cut and paste.
+   *  Encourages creating a dictionary that is managed using source code workflow.
+   *  Encourages defining structures used by a multiple md API once and re-using them.    
+   *  Interpolating selected fields from yml files that represent the dictionary reduces the need to edit copy / paste when descriptions have they are re-used across many markdown files.  
+   *  Provides a easily extensible format to add more data elements to the dictionary
+   *  Provides a change log, audit history and approvals using standard git workflow.
+*  Allows easy custom production versions useful  when the final published documentation may include internal technical descriptions or may need to be adjusted for public consumption by only including descriptions approved for external publishing.   
+*  Produces both expanded markdown and html files to allow easy viewing.
+*  Supports html page auto reload and auto regeneration to easily show the results as markdown is edited.
 
 ## Command Line API
 
@@ -141,14 +145,14 @@ table: person
 desc: Last Name of person
 tech_desc: Last Name of person stored in addressbook.table.person.lname in primary oracle database. 
   Must Match legal name as shown on drivers license or passport.
-  ```
+```
   { 'person' : 
     {'lname' : 'myname' } 
   }
   ```
 type: string
 len: 50
-```
+  ```
 
 * Notes the multi-line value for tech_desc The system will allow this even though it is not formally syntactically correct yml.
 
@@ -160,7 +164,7 @@ MIT License: https://opensource.org/licenses/MIT
 Contact me on linkedin: https://www.linkedin.com/in/joe-ellsworth-68222/
 ```
 
-**[shared/person/example_person.md](shared/person/example_person.md)**
+**[shared/person/example_person.md](data/data-dict/shared/person/example_person.md)**
 
 Used to show the concept of a re-usable shared component.
 
