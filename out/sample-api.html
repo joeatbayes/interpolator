@@ -126,9 +126,8 @@ a:active {
 
 <ul>
 <li><strong>maxRec</strong>=99</li>
-<li><strong>fname</strong>=  First name of person
-type: string
-len: 50</li>
+
+<li><p><strong>fname</strong>=  First name of person</p></li>
 
 <li><p><strong>lname</strong>=  Last Name of person stored in addressbook.table.person.lname in primary oracle database.
 Must Match legal name as shown on drivers license or passport.</p>
@@ -136,14 +135,27 @@ Must Match legal name as shown on drivers license or passport.</p>
 <pre><code>{ &#39;person&#39; : 
 {&#39;lname&#39; : &#39;myname&#39; } 
 }
-</code></pre>
-
-<p>type: string
-len: 50</p></li>
+</code></pre></li>
 
 <li><p><strong>Type</strong>= string
-len: 50  <strong>len</strong>= 50</p></li>
+<strong>len</strong>= 50</p></li>
 </ul>
+<h2><a name="sample-output" class="anchor" href="#sample-output" rel="nofollow" aria-hidden="true"><span class="octicon octicon-link"></span></a>
+Sample Output</h2>
+
+<pre><code>  &#39;person&#39;: {
+    &#39;lname&#39;: &#39;Jimbo&#39;,
+    &#39;fname&#39;: &#39;Jackson&#39;,
+    &#39;colors&#39;: {
+       &#39;car&#39;: &#39;red&#39;,
+       &#39;boat&#39;: &#39;blue&#39;,
+       &#39;house&#39;: &#39;cream&#39;,
+       &#39;hair&#39;: &#39;brown&#39;
+    }
+  } 
+</code></pre>
+<h2><a name="copyright" class="anchor" href="#copyright" rel="nofollow" aria-hidden="true"><span class="octicon octicon-link"></span></a>
+Copyright</h2>
 
 <p>(C) Copyright Joseph Ellsworth Mar-2019</p>
 

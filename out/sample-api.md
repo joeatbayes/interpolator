@@ -6,8 +6,7 @@
 
 * **maxRec**=99
 * **fname**=  First name of person
-type: string
-len: 50
+
 * **lname**=  Last Name of person stored in addressbook.table.person.lname in primary oracle database. 
   Must Match legal name as shown on drivers license or passport.
   ```
@@ -15,12 +14,27 @@ len: 50
     {'lname' : 'myname' } 
   }
   ```
-type: string
-len: 50
+
 * **Type**= string
-len: 50  **len**= 50
+  **len**= 50
 
 
+## Sample Output
+```
+  'person': {
+    'lname': 'Jimbo',
+    'fname': 'Jackson',
+    'colors': {
+       'car': 'red',
+       'boat': 'blue',
+       'house': 'cream',
+       'hair': 'brown'
+    }
+  } 
+```
+
+
+## Copyright
 
 
 (C) Copyright Joseph Ellsworth Mar-2019

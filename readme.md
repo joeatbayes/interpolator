@@ -1,6 +1,13 @@
 # Interpolator
 
-Reads a text or markdown file and replaces defined values with contents from previously defined content such as a dictionary or object definition.   
+Reads a text or markdown file and replaces defined values with contents from previously defined content such as a dictionary or object definitions.    
+
+*  Aids in the production of consistent documentation when many fields are reused in different context across many API
+* Allows easy custom production versions useful  when the final published documentation may include internal technical descriptions or may need to be adjusted for public consumption by only including descriptions approved for external publishing.   
+* Encourages defining structures used by a multiple md API once and re-using them.    
+* Encourages creating of a data dictionary that is managed using source code workflow and interpolating selected content from yml files containing the dictionary to reduce the need to edit copy / paste when descriptions have been duplicated across many markdown files. 
+* Produces both expanded markdown and html files to allow easy viewing.
+* Supports html page auto reload and auto regeneration to easily show the results as markdown is edited.
 
 ## Command Line API
 
@@ -45,7 +52,7 @@ interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNa
          Sleep for a number of seconds and then re-process.
 		 This is intended to keep a generated file available to 
 		 easily reload.  eg:  -loopDelay=30 will cause the system to 
-		 reprocess the input files once every 30 seconds...
+		 reprocess the input files once every 30 seconds.
 ```
 
 ### Save  version with markdown converted to HTML
@@ -55,6 +62,7 @@ interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNa
 ```
 
 * Adding the -saveHtml=yes will cause the system to re-read the expanded markup and write a HTML version. 
+* When -loopDelay is set with -saveHtml javascript is added to the HTML page to cause it to refresh on roughly the same loop cycle.  
 
 ### Run in a Continuous Loop to support easy preview
 
@@ -82,9 +90,13 @@ The sample shown here uses md (markdown) syntax but it would work with any text 
 * **maxRec**={*maxRec}
 * **fname**= {*person/fname}
 * **lname**= {*person/lname#tech_desc}
-  * **Type**={*person/lname#type}  **len**={*person/lname#len}
+* **Type**={*person/lname#type}  **len**={*person/lname#len}
 
-{*inc: inc/legal/copyright.txt}
+## Sample Output
+{*inc: share/person/example_person.md}
+
+## Copyright
+{*inc: share/legal/copyright.txt}
 ```
 
 * Any string contained inside of {} will be treated as a variable that needs to be resolved.  When first character after { is *.    The * was used to make it easier to avoid parsing and attempted interpolation when sample JSON or other curly brace languages are part of input. 
@@ -127,17 +139,47 @@ name: lname
 domain: addressbook
 table: person
 desc: Last Name of person
+tech_desc: Last Name of person stored in addressbook.table.person.lname in primary oracle database. 
+  Must Match legal name as shown on drivers license or passport.
+  ```
+  { 'person' : 
+    {'lname' : 'myname' } 
+  }
+  ```
 type: string
 len: 50
 ```
 
+* Notes the multi-line value for tech_desc The system will allow this even though it is not formally syntactically correct yml.
+
 **[legal/copyright.txt](data/data-dict/share/legal/copyright.txt)**
 
-```
+```txt
 (C) Copyright Joseph Ellsworth Mar-2019
 MIT License: https://opensource.org/licenses/MIT
 Contact me on linkedin: https://www.linkedin.com/in/joe-ellsworth-68222/
 ```
+
+**[shared/person/example_person.md](shared/person/example_person.md)**
+
+Used to show the concept of a re-usable shared component.
+
+```
+​```
+  'person': {
+    'lname': 'Jimbo',
+    'fname': 'Jackson',
+    'colors': {
+       'car': 'red',
+       'boat': 'blue',
+       'house': 'cream',
+       'hair': 'brown'
+    }
+  } 
+​```
+```
+
+
 
 ## Sample Output
 

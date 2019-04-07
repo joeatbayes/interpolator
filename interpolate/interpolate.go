@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	//"bytes"
 	//"encoding/json"
 	"fmt"
@@ -189,7 +190,10 @@ func (r *Interpolate) elapSec() float64 {
 var ParmMatch, ParmErr = regexp.Compile(`\{\*.*?\}`)
 
 // Pattern used to find any named tag in yml
-var MatchAnyTag, perr2 = regexp.Compile(`\v+\s*\w+?\:`)
+var MatchAnyTag, perr2 = regexp.Compile(`^\s*\w+?\:`)
+
+var nlByte = byte('\n')
+var nlByteArr = []byte("\n")
 
 // find index of the matching field and then take text until
 // we find the next tag indicating starting next element.
@@ -197,24 +201,34 @@ var MatchAnyTag, perr2 = regexp.Compile(`\v+\s*\w+?\:`)
 func (r *Interpolate) GetFieldSingle(data []byte, specPath string) string {
 	rePatt := `\s*?` + specPath + `\:`
 	lookPat, parmErr := regexp.Compile(rePatt)
+	if parmErr != nil {
+		fmt.Println("L205: pattern  error: specPath=", specPath, " rePatt=", rePatt, " parmErr=", parmErr, " data=\n", string(data), "\n\n")
+	}
 	m := lookPat.FindIndex([]byte(data))
-	fmt.Println("L57: specPath=", specPath, " rePatt=", rePatt, " parmErr=", parmErr, " m=", m, " data=\n", string(data), "\n\n")
+	//fmt.Println("L208: specPath=", specPath, " rePatt=", rePatt, " parmErr=", parmErr, " m=", m, " data=\n", string(data), "\n\n")
 	if m == nil {
 		return ""
 	} else {
-		start, end := m[0], m[1]
-		fmt.Println("L62: rePatt=", rePatt, " parmErr=", parmErr, " start=", start, " end=", end)
+		_, end := m[0], m[1]
+		//fmt.Println("L213: rePatt=", rePatt, " parmErr=", parmErr, " start=", start, " end=", end)
 		remaining := data[end:]
-		mrest := MatchAnyTag.FindIndex(remaining)
-		//fmt.Println("L65: mrest=", mrest, " remaining=\n", string(remaining), "\n\n\n")
-		if mrest == nil {
-			return string(remaining)
-		} else {
-			restStart := mrest[0]
-			varMatch := string(remaining[0:restStart])
-			//fmt.Println("L71: varMatch=", varMatch)
-			return varMatch
+		var sb []string
+		// accumulate line by line until
+		//
+		restArr := bytes.Split(remaining, nlByteArr)
+		for _, tline := range restArr {
+			mrest := MatchAnyTag.FindIndex(tline)
+			//fmt.Println("L222: mrest=", mrest, " tline=", string(tline))
+			if mrest == nil {
+				sb = append(sb, string(tline))
+				if len(tline) > 0 {
+					sb = append(sb, "\n")
+				}
+			} else {
+				break
+			}
 		}
+		return s.Join(sb, "")
 	}
 }
 
@@ -312,7 +326,7 @@ func (r *Interpolate) InterpolateStr(str string) string {
 			tpath := filepath.Join(r.baseDir, basicPath) + ".yml"
 			tpath = s.Replace(tpath, ".yml.yml", ".yml", 1)
 			data, err := ioutil.ReadFile(tpath)
-			fmt.Println("L158: fname=", tpath, "data=", string(data))
+			//fmt.Println("L158: fname=", tpath, "data=", string(data))
 			if err != nil {
 				fmt.Println("L160: Error reading ", tpath, " err=", err)
 				// could not read file so copy original path
@@ -420,14 +434,14 @@ func (u *Interpolate) saveAsHTML(srcFile string) {
 func (u *Interpolate) processFile(inFiName string, outFiName string) {
 	inFile, err := os.Open(inFiName)
 	if err != nil {
-		fmt.Println("error opening input file ", inFiName, " err=", err)
+		fmt.Println("L423: error opening input file ", inFiName, " err=", err)
 		os.Exit(3)
 	}
 	defer inFile.Close()
 
 	outFile, sferr := os.Create(outFiName)
 	if sferr != nil {
-		fmt.Println("Can not open out file ", outFiName, " sferr=", sferr)
+		fmt.Println("L430: Can not open out file ", outFiName, " sferr=", sferr)
 		os.Exit(3)
 	}
 
@@ -441,7 +455,7 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 			continue
 		} else {
 			outStr := u.InterpolateStr(aline)
-			//fmt.Println("L160: outStr=", outStr)
+			//fmt.Println("L444: outStr=", outStr)
 			outFile.WriteString(outStr)
 			fmt.Fprintln(outFile, "")
 		}
@@ -484,7 +498,7 @@ func main() {
 	inName := parms.Sval("in", DefIn)
 	outName := parms.Sval("out", DefOut)
 	u := makeInterpolator()
-	fmt.Println("OutName=", outName)
+	//fmt.Println("OutName=", outName)
 
 	u.pargs = parms
 	u.glob = parms.Sval("glob", "*.md")
@@ -494,7 +508,7 @@ func main() {
 	u.saveHtml = parms.Bval("savehtml", false)
 	u.loopDelay = parms.Ival("loopdelay", -1)
 	jutil.EnsurDir(outName)
-	fmt.Println("u=", u, "saveHtml=", u.saveHtml)
+	//fmt.Println("u=", u, "saveHtml=", u.saveHtml)
 
 	if jutil.IsDirectory(u.baseDir) == false {
 		fmt.Println("L191: FATAL ERROR: baseDir ", u.baseDir, " must be a directory")
@@ -510,5 +524,6 @@ func main() {
 		}
 	} else {
 		u.processDir(inName, outName)
+		jutil.Elap("L382: Finished Run", startms, jutil.Nowms())
 	}
 }
