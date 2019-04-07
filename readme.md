@@ -18,7 +18,7 @@ Reads a text or markdown file and replaces defined values with contents from pre
 ### Sample Invocation
 
 ```
-interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99
+interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99 -loopDelay=5 -saveHtml=yes
 ```
 
 ```
