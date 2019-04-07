@@ -2,7 +2,8 @@
 set GOPATH=%cd%
 
 go get -u "github.com/joeatbayes/goutil/jutil"
-go get -u gopkg.in/russross/blackfriday.v2
+::go get -u gopkg.in/russross/blackfriday.v2
+go get -u "github.com/shurcooL/github_flavored_markdown"
 
 
 set GOOS=darwin
