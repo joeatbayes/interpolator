@@ -10,25 +10,63 @@ Reads a text or markdown file and replaces defined values with contents from pre
 interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99
 ```
 
-* **-in** = path to input directory containing files to process .  Defaults to ./data
-* **-out** = path to output directory where expanded files will be written.   defaults to ./out
-* **-glob**= glob pattern to use when selecting files to process in input directory.  Defaults to *.md
-* **-search** = Directory Base to search for files named in interpolated parameters.
-* **-varNames** = Default variable name  matched in dictionary files.  Can be overridden if variable name is specified using #varname semantic.    May be common separated list to allow default lookup of backup fields such as look first in tech_desc then in desc.
-* **-keepNames** = when set to true it will keep the supplied path as part of output text.   When not set or false will replace content of path with content.
-* **-saveHtml**= when set to yes will convert the md file to Html and save it in the output directory. 
+```
+  -in = path to input directory containing files to process. 
+        Defaults to ./data
+  -out = path to output directory where expanded files will be
+         written.   defaults to ./out
+  -glob= glob pattern to use when selecting files to process in 
+         input directory.  Defaults to *.md
+  -search = Directory Base to search for files named in
+         interpolated parameters.
+  -varNames = Default variable name  matched in dictionary files.
+         Can be overridden if variable name is specified using 
+		 #varname semantic.    May be common separated list to 
+		 allow default lookup of backup fields such as look first 
+		 in tech_desc then in desc. -varNames=desc,tech_desc - 
+		 Causes the system to search first in the desc: field 
+		 then in the tech_desc.   This would use the business 
+		 description to be used first and then filled in tech 
+		 desc if desc is not found.   Just reverse the order to 
+		 cause it to use the technical description first. It 
+		 will use the first one found.   When the varname is 
+		 specified using the # semantic it will use the 
+		 specified var name and ignore the default varNames.
+  -keepNames = when set to true it will keep the supplied path as 
+         part of output text.   When not set or false will 
+		 replace content of path with content.
+  -saveHtml=yes when set to yes will convert the md file to Html
+         and save it in the output directory. 
+  -maxRec this is a variable defined on command line that is 
+         being interpolated.  Resolution of variables defined 
+		 on command line take precedence over those  resolved 
+		 in files. 
+  -loopDelay - When set the system will process the input.  
+         Sleep for a number of seconds and then re-process.
+		 This is intended to keep a generated file available to 
+		 easily reload.  eg:  -loopDelay=30 will cause the system to 
+		 reprocess the input files once every 30 seconds...
+```
 
+### Save  version with markdown converted to HTML
 
-
-#### Saving md files converted to HTML
-
+```
 interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99 -saveHtml=yes
+```
 
-Adding the -saveHtml=yes will cause the system to re-read the expanded markup and write a HTML version. 
+* Adding the -saveHtml=yes will cause the system to re-read the expanded markup and write a HTML version. 
 
+### Run in a Continuous Loop to support easy preview
 
+```
+interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99 -saveHtml=yes -loopDelay=10
+```
+
+* Adding -loopDelay=10 will cause the system to process the files and then wait for 10 seconds before reprocessing the file.  This will cause the system to repeatedly regenerate the expanded markdown files.  If -saveHtml=yes is also set then it will also cause the system to regenerate generated html.
 
 # Data Format API
+
+The sample shown here uses md (markdown) syntax but it would work with any text file that can be parsed in a similar fashion. 
 
 ## Sample Input
 
@@ -107,7 +145,7 @@ Contact me on linkedin: https://www.linkedin.com/in/joe-ellsworth-68222/
 SAMPLE OUTPUT
 ```
 
-
+![sample output](docs/sample_output.jpg)
 
 # Build
 

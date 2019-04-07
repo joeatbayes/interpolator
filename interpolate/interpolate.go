@@ -11,10 +11,10 @@ import (
 	//"net/http"
 	"os"
 	//"path/filepath"
+	"path/filepath"
 	"regexp"
 	s "strings"
-	//"time"
-	"path/filepath"
+	"time"
 
 	"github.com/joeatbayes/goutil/jutil"
 	"github.com/shurcooL/github_flavored_markdown"
@@ -142,6 +142,17 @@ a:active {
 	<body>
 	  <article class="markdown-body entry-content" style="padding: 30px;">
   `
+
+var htmlJavscriptReload = `
+  <script>
+  function doReload(){   
+    location.reload(); 
+  }
+
+  setInterval(doReload, loopDelay);
+  </script>
+  `
+
 var htmlSuffix = `
     </article>
 	</body>
@@ -160,6 +171,7 @@ type Interpolate struct {
 	baseDir    string
 	varPaths   []string
 	saveHtml   bool
+	loopDelay  int
 }
 
 func makeInterpolator() *Interpolate {
@@ -332,17 +344,43 @@ func (r *Interpolate) InterpolateStr(str string) string {
 
 func PrintHelp() {
 	fmt.Println(
-		` interpolate  -in=data/sample-api.md -out=out/sample-api.md -baseDir=./data/dict  -defaulVarPath=desc  -keepPaths=true
+		`interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99
 
-  -in = path of a input file to process.  May be a specific file or a glob pattern.
-
-  -out = Location to write the output file once expanded
-  -baseDir = Directory Base to search for files named in interpolated parameters.
-
-  -defaultVarPath = string matched in predefined file to pull next string. 
-
-  -keepPaths = when set to true it will keep the supplied path as part of output text.   When not set or false will replace content of path with content.
-
+  -in = path to input directory containing files to process. 
+        Defaults to ./data
+  -out = path to output directory where expanded files will be
+         written.   defaults to ./out
+  -glob= glob pattern to use when selecting files to process in 
+         input directory.  Defaults to *.md
+  -search = Directory Base to search for files named in
+         interpolated parameters.
+  -varNames = Default variable name  matched in dictionary files.
+         Can be overridden if variable name is specified using 
+		 #varname semantic.    May be common separated list to 
+		 allow default lookup of backup fields such as look first 
+		 in tech_desc then in desc. -varNames=desc,tech_desc - 
+		 Causes the system to search first in the desc: field 
+		 then in the tech_desc.   This would use the business 
+		 description to be used first and then filled in tech 
+		 desc if desc is not found.   Just reverse the order to 
+		 cause it to use the technical description first. It 
+		 will use the first one found.   When the varname is 
+		 specified using the # semantic it will use the 
+		 specified var name and ignore the default varNames.
+  -keepNames = when set to true it will keep the supplied path as 
+         part of output text.   When not set or false will 
+		 replace content of path with content.
+  -saveHtml=yes when set to yes will convert the md file to Html
+         and save it in the output directory. 
+  -maxRec this is a variable defined on command line that is 
+         being interpolated.  Resolution of variables defined 
+		 on command line take precedence over those  resolved 
+		 in files. 
+  -loopDelay - When set the system will process the input.  
+         Sleep for a number of seconds and then re-process.
+		 This is intended to keep a generated file available to 
+		 easily reload.  eg:  -loopDelay=30 will cause the system to 
+		 reprocess the input files once every 30 seconds.
 	-`)
 }
 
@@ -358,12 +396,18 @@ func (u *Interpolate) saveAsHTML(srcFile string) {
 			fmt.Println("L260: Error reading ", srcFile, " err=", err)
 		} else {
 			hname := s.Replace(srcFile, ".md", ".html", 1)
-			fmt.Println("L234: html filename=", hname)
+			//fmt.Println("L234: html filename=", hname)
 			f, err := os.Create(hname)
 			if err != nil {
 				fmt.Println("error writing to ", hname, " err=", err)
 			} else {
 				f.WriteString(htmlPrefix)
+				if u.loopDelay > 0 {
+					delayStr := fmt.Sprintf("%f", float32(u.loopDelay)*1000)
+					//fmt.Println("L407: delayStr=", delayStr, "reloadStr=", htmlJavscriptReload)
+					tmp := s.Replace(string(htmlJavscriptReload), "loopDelay", delayStr, 1)
+					f.WriteString(tmp)
+				}
 				f.Write(github_flavored_markdown.Markdown(data))
 				f.WriteString(htmlSuffix)
 				f.Close()
@@ -448,6 +492,7 @@ func main() {
 	u.varPaths = s.Split(parms.Sval("varnames", "desc"), ",")
 	u.baseDir = s.TrimSpace(parms.Sval("search", "data/data-dict/"))
 	u.saveHtml = parms.Bval("savehtml", false)
+	u.loopDelay = parms.Ival("loopdelay", -1)
 	jutil.EnsurDir(outName)
 	fmt.Println("u=", u, "saveHtml=", u.saveHtml)
 
@@ -456,6 +501,12 @@ func main() {
 		os.Exit(3)
 	}
 
-	u.processDir(inName, outName)
-	jutil.Elap("L382: Finished Run", startms, jutil.Nowms())
+	if u.loopDelay > 0 {
+		for {
+			u.processDir(inName, outName)
+			jutil.Elap("L382: Finished Run", startms, jutil.Nowms())
+			time.Sleep(time.Duration(u.loopDelay) * time.Second)
+			startms = jutil.Nowms()
+		}
+	}
 }

@@ -1,5 +1,6 @@
 # Binaries for programs and plugins
-*.exe
+xx*.exe
+interpolate.exe
 *.exe~
 *.dll
 *.so
@@ -14,7 +15,7 @@
 *.log.txt
 pkg*
 src/github.com/*
-interpolate-darwin-386
-interpolate-linux-386
+xxinterpolate-darwin-386
+xxinterpolate-linux-386
 interpolate-solaris-amd64
-interpolate-windows-386
+xxinterpolate-windows-386
