@@ -47,7 +47,8 @@ interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNa
          part of output text.   When not set or false will 
          replace content of path with content.
   -saveHtml=yes when set to yes will convert the md file to Html
-         and save it in the output directory. 
+         and save it in the output directory.   When not set the
+         the system will not save the HTML file. 
   -maxRec this is a variable defined on command line that is 
          being interpolated.  Resolution of variables defined 
          on command line take precedence over those  resolved 
@@ -56,7 +57,8 @@ interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNa
          Sleep for a number of seconds and then re-process.
          This is intended to keep a generated file available to 
          easily reload.  eg:  -loopDelay=30 will cause the system to 
-         reprocess the input files once every 30 seconds.
+         reprocess the input files once every 30 seconds. 
+         When not set the system will run once and quit.
 ```
 
 * The command above assumes that you have built the interpolate executable as described in the build section below.   It also assumes that you have added the interpolate executable to the search path.
