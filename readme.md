@@ -28,31 +28,31 @@ interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNa
          interpolated parameters.
   -varNames = Default variable name  matched in dictionary files.
          Can be overridden if variable name is specified using 
-		 #varname semantic.    May be common separated list to 
-		 allow default lookup of backup fields such as look first 
-		 in tech_desc then in desc. -varNames=desc,tech_desc - 
-		 Causes the system to search first in the desc: field 
-		 then in the tech_desc.   This would use the business 
-		 description to be used first and then filled in tech 
-		 desc if desc is not found.   Just reverse the order to 
-		 cause it to use the technical description first. It 
-		 will use the first one found.   When the varname is 
-		 specified using the # semantic it will use the 
-		 specified var name and ignore the default varNames.
+         #varname semantic.    May be common separated list to 
+         allow default lookup of backup fields such as look first 
+         in tech_desc then in desc. -varNames=desc,tech_desc - 
+         Causes the system to search first in the desc: field 
+         then in the tech_desc.   This would use the business 
+         description to be used first and then filled in tech 
+         desc if desc is not found.   Just reverse the order to 
+         cause it to use the technical description first. It 
+         will use the first one found.   When the varname is 
+         specified using the # semantic it will use the 
+         specified var name and ignore the default varNames.
   -keepNames = when set to true it will keep the supplied path as 
          part of output text.   When not set or false will 
-		 replace content of path with content.
+         replace content of path with content.
   -saveHtml=yes when set to yes will convert the md file to Html
          and save it in the output directory. 
   -maxRec this is a variable defined on command line that is 
          being interpolated.  Resolution of variables defined 
-		 on command line take precedence over those  resolved 
-		 in files. 
+         on command line take precedence over those  resolved 
+         in files. 
   -loopDelay - When set the system will process the input.  
          Sleep for a number of seconds and then re-process.
-		 This is intended to keep a generated file available to 
-		 easily reload.  eg:  -loopDelay=30 will cause the system to 
-		 reprocess the input files once every 30 seconds.
+         This is intended to keep a generated file available to 
+         easily reload.  eg:  -loopDelay=30 will cause the system to 
+         reprocess the input files once every 30 seconds.
 ```
 
 ### Save  version with markdown converted to HTML
@@ -182,10 +182,6 @@ Used to show the concept of a re-usable shared component.
 
 
 ## Sample Output
-
-```
-SAMPLE OUTPUT
-```
 
 ![sample output](docs/sample_output.jpg)
 
