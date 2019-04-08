@@ -8,7 +8,7 @@
 * **fname**=  First name of person
 
 * **lname**=  Last Name of person stored in addressbook.table.person.lname in primary oracle database. 
-  Must Match legal name as shown on drivers license or passport.
+  Must Match legal name as shown on drivers license or passport. 
   ```
   { 'person' : 
     {'lname' : 'myname' } 
@@ -28,7 +28,7 @@
        'car': 'red',
        'boat': 'blue',
        'house': 'cream',
-       'hair': 'brown',
+       'hair': 'dark brown',
        'cat' : 'black and white spots'
     }
   } 
@@ -43,7 +43,7 @@
 
 MIT License: https://opensource.org/licenses/MIT
 
-Contact me on linkedin: https://www.linkedin.com/in/joe-ellsworth-68222/
+Contact me on linkedin: https://www.linkedin.com/in/joe-ellsworth-68222/ if you want a great programmer.
 
 
 

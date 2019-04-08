@@ -6,7 +6,7 @@
        'car': 'red',
        'boat': 'blue',
        'house': 'cream',
-       'hair': 'brown',
+       'hair': 'dark brown',
        'cat' : 'black and white spots'
     }
   } 

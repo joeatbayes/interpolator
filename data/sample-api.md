@@ -5,9 +5,9 @@
 **sample uri**: http://namesearch.com/addrBook/search?fname=joe&lname=jackson&maxRec=389
 
 * **maxRec**={*maxRec}
-* **fname**= {*person/fname}
-* **lname**= {*person/lname#tech_desc}
-* **Type**={*person/lname#type}  **len**={*person/lname#len}
+* **fname**= {*db/person/fname}
+* **lname**= {*db/person/lname#tech_desc}
+* **Type**={*db/person/lname#type}  **len**={*db/person/lname#len}
 
 ## Sample Output
 {*inc: share/person/example_person.md}
