@@ -23,5 +23,5 @@ go build -o interpolate-solaris-amd64 interpolate/interpolate.go
 
 set GOOS=windows
 set GOARCH=386
-go build -o interpolate-windows-386 interpolate/interpolate.go 
+go build -o interpolate-windows-386.exe interpolate/interpolate.go 
 
