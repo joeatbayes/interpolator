@@ -133,11 +133,11 @@ a:active {
 <p><strong>sample uri</strong>: <a href="http://namesearch.com/addrBook/search?fname=joe&amp;lname=jackson&amp;maxRec=389" rel="nofollow">http://namesearch.com/addrBook/search?fname=joe&amp;lname=jackson&amp;maxRec=389</a></p>
 
 <ul>
-<li><strong>maxRec</strong>=99</li>
+<li><strong>maxRec</strong>= <em>(maxrec)</em> 99</li>
 
-<li><p><strong>fname</strong>=  First name of person</p></li>
+<li><p><strong>fname</strong>=  <em>(db/person/fname)</em>  First name of person</p></li>
 
-<li><p><strong>lname</strong>=  Last Name of person stored in addressbook.table.person.lname in primary oracle database.
+<li><p><strong>lname</strong>=  <em>(db/person/lname#tech_desc)</em>  Last Name of person stored in addressbook.table.person.lname in primary oracle database.
 Must Match legal name as shown on drivers license or passport.</p>
 
 <pre><code>{ &#39;person&#39; : 
@@ -145,11 +145,13 @@ Must Match legal name as shown on drivers license or passport.</p>
 }
 </code></pre></li>
 
-<li><p><strong>Type</strong>= string
-<strong>len</strong>= 50</p></li>
+<li><p><strong>Type</strong>= <em>(db/person/lname#type)</em>  string
+<strong>len</strong>= <em>(db/person/lname#len)</em>  50</p></li>
 </ul>
 <h2><a name="sample-output" class="anchor" href="#sample-output" rel="nofollow" aria-hidden="true"><span class="octicon octicon-link"></span></a>
 Sample Output</h2>
+
+<p><em>(inc: share/person/example_person.md)</em></p>
 
 <pre><code>  &#39;person&#39;: {
     &#39;lname&#39;: &#39;Jimbo&#39;,
@@ -169,6 +171,8 @@ Sample Output</h2>
 </ul>
 <h2><a name="copyright" class="anchor" href="#copyright" rel="nofollow" aria-hidden="true"><span class="octicon octicon-link"></span></a>
 Copyright</h2>
+
+<p><em>(inc: share/legal/copyright.txt)</em></p>
 
 <p>(C) Copyright Joseph Ellsworth Mar-2019</p>
 
