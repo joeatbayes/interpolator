@@ -93,7 +93,7 @@ The sample shown here uses md (markdown) syntax but it would work with any text 
 
 ## Sample Input
 
-[sample-api.md](data/sample-api.md)
+[sample-api.md](data/sample/sample-api.md)
 
 ```markdown
 # Name Search
@@ -136,7 +136,7 @@ The sample shown here uses md (markdown) syntax but it would work with any text 
 
 ## Sample Data Dictionary LOOKUP
 
-**[person/fname.yml](data/data-dict/person/fname.yml)**
+**[person/fname.yml](data/data-dict/db/person/fname.yml)**
 
 ```
 name: fname
@@ -147,7 +147,7 @@ type: string
 len: 50
 ```
 
-**[person/lname.yml](data/data-dict/person/lname.yml)**
+**[person/lname.yml](data/data-dict/db/person/lname.yml)**
 
 ```
 name: lname
@@ -175,7 +175,7 @@ MIT License: https://opensource.org/licenses/MIT
 Contact me on linkedin: https://www.linkedin.com/in/joe-ellsworth-68222/
 ```
 
-**[shared/person/example_person.md](data/data-dict/shared/person/example_person.md)**
+**[share/person/example_person.md](data/data-dict/share/person/example_person.md)**
 
 Used to show the concept of a re-usable shared component.
 
@@ -197,6 +197,8 @@ Used to show the concept of a re-usable shared component.
 
 
 ## Sample Output
+
+[Expanded Markdown](out/sample-api.md)  [expanded-html](out/sample-api.html)
 
 ![sample output](docs/sample_output.jpg)
 
