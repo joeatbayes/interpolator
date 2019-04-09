@@ -1,6 +1,6 @@
 # Interpolator
 
-Reads a text or markdown file and replaces defined values with contents from previously defined content such as a dictionary or object definitions.    
+*Reads* a text or markdown file and replaces defined values with contents from previously defined content such as a dictionary or object definitions.    
 
 *  Aids in the production of consistent documentation when many fragments of content are reused in different context across many files by interpolating descriptive text or other field data directly from shared definitions.  
    *  Minimizes re-editing many files due to cut and paste.
@@ -18,7 +18,7 @@ Reads a text or markdown file and replaces defined values with contents from pre
 ### Sample Invocation
 
 ```
-interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99 -loopDelay=5 -saveHtml=yes
+interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=yes -maxRec=99 -loopDelay=5 -saveHtml=yes
 ```
 
 ```

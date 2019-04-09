@@ -23,18 +23,18 @@ import (
 )
 
 type Interpolate struct {
-	perf       *jutil.PerfMeasure
-	pargs      *jutil.ParsedCommandArgs
-	inPath     string
-	outPath    string
-	glob       string
-	processExt string // file name extension to use when processing directories.
-	start      float64
-	keepPaths  bool
-	baseDir    string
-	varPaths   []string
-	saveHtml   bool
-	loopDelay  float32
+	perf         *jutil.PerfMeasure
+	pargs        *jutil.ParsedCommandArgs
+	inPath       string
+	outPath      string
+	glob         string
+	processExt   string // file name extension to use when processing directories.
+	start        float64
+	keepVarNames bool
+	baseDir      string
+	varPaths     []string
+	saveHtml     bool
+	loopDelay    float32
 }
 
 func makeInterpolator() *Interpolate {
@@ -125,11 +125,13 @@ func (r *Interpolate) InterpolateStr(str string) string {
 	if len(ms) < 1 {
 		return str // no match found
 	}
+
 	//sb := strings.Builder
 	var sb []string
 	last := 0
 	slen := len(str)
 	for _, m := range ms {
+		keepVarNames := r.keepVarNames
 		origStr := str[m[0]:m[1]]
 		start, end := m[0]+2, m[1]-1
 		//fmt.Printf("m[0]=%d m[1]=%d match = %q\n", m[0], m[1], str[start:end])
@@ -138,8 +140,10 @@ func (r *Interpolate) InterpolateStr(str string) string {
 			sb = append(sb, str[last:start-2])
 		}
 		aMatchStr := s.ToLower(str[start:end])
+		varNameIncPath := " *(" + aMatchStr + ")* "
 		fmt.Printf("L64: matchStr=%s original=%s\n", aMatchStr, origStr)
 		if s.HasPrefix(aMatchStr, "inc:") {
+			// Handle Include File
 			// Process simple file include
 			//fmt.Println("L69:found inc: prefix")
 			matchPort := s.TrimSpace(aMatchStr[4:])
@@ -155,6 +159,10 @@ func (r *Interpolate) InterpolateStr(str string) string {
 				} else {
 					// save file read into our output buffer
 					//fmt.Println("L137 Add file from buffer data=\n", string(data), "\n\n")
+					if keepVarNames {
+						sb = append(sb, varNameIncPath)
+						sb = append(sb, " \n")
+					}
 					sb = append(sb, r.InterpolateStr(string(data)))
 				}
 			} else {
@@ -164,6 +172,7 @@ func (r *Interpolate) InterpolateStr(str string) string {
 
 		} else if s.HasPrefix(aMatchStr, "http:") || s.HasPrefix(aMatchStr, "https:") {
 			// Process as a URI to read
+			// Handle URI Fetch
 
 		} else if r.pargs.Exists(aMatchStr) {
 			// substitute match string with parms value
@@ -172,8 +181,8 @@ func (r *Interpolate) InterpolateStr(str string) string {
 			//  if do not find it in the command line parms
 			lookVal := r.pargs.Sval(aMatchStr, origStr) // "{*"+aMatchStr+"}")
 			//fmt.Printf("L99: matchStr=%s  lookVal=%s\n", aMatchStr, lookVal)
-			if r.keepPaths {
-				sb = append(sb, "*"+aMatchStr+"* ")
+			if keepVarNames {
+				sb = append(sb, varNameIncPath)
 			}
 			sb = append(sb, r.InterpolateStr(lookVal))
 
@@ -199,6 +208,10 @@ func (r *Interpolate) InterpolateStr(str string) string {
 				// save file read into our output buffer
 				extractStr := r.GetField(data, varSpecPath, r.varPaths)
 				if extractStr > " " {
+					if keepVarNames {
+						sb = append(sb, varNameIncPath)
+					}
+
 					sb = append(sb, r.InterpolateStr(extractStr))
 				} else {
 					// Could not find a match so output default
@@ -334,7 +347,7 @@ func main() {
 
 	u.pargs = parms
 	u.glob = parms.Sval("glob", "*.md")
-	u.keepPaths = parms.Bval("keepnames", false)
+	u.keepVarNames = parms.Bval("keepnames", false)
 	u.varPaths = s.Split(parms.Sval("varnames", "desc"), ",")
 	u.baseDir = s.TrimSpace(parms.Sval("search", "data/data-dict/"))
 	u.saveHtml = parms.Bval("savehtml", false)

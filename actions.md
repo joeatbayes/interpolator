@@ -6,13 +6,16 @@
 
 # Under Consideration:
 
-1. Save a list of the markdown and html generated and save as a index page.
-2. Modify to use the BlackFriday markdown generator.   When I tried it at first it did not produce what expected but I think it may be able to work with correct options and it is much smaller and more commonly used. 
-3. Add a notion to import specification such as + before actual text to allow specification of keeping path.   EG:  {*person/name#desc} would just substitute the label with path with the content of the person/name yml with desc field.  Where {*+*person/name#desc} would keep the label path and add it to the output.
-4. Implement file directory recursive walk for input.  Generate same output directory in the output directory.
-5. Add Cache of input files read as key values.
-6. Add Cache of full files plus var name segment 
-7. Implement a full YAML parser for inputs.
+1. Add support for relative files by looking for ./ as first path segment.  When that is encountered use the  directory of the last read file rather than search as starting path.
+2. Add support for recursive walk of Dir Tree and generate new file with same name in relative tree in output.
+3. Save a list of the markdown and html generated and save as a index page.
+4. Cache File names and timestamp changed and only re-read if the file date modified has changed.
+5. Modify to use the BlackFriday markdown generator more directly.  The current md to html tool is too large and slows down download.    When I tried it at first it did not produce what expected but I think it may be able to work with correct options and it is much smaller and more commonly used. 
+6. Add a notion to import specification such as + before actual text to allow specification of keeping path.   EG:  {*person/name#desc} would just substitute the label with path with the content of the person/name yml with desc field.  Where {*+*person/name#desc} would keep the label path and add it to the output.
+7. Implement file directory recursive walk for input.  Generate same output directory in the output directory.
+8. Add Cache of input files read as key values.
+9. Add Cache of full files plus var name segment 
+10. Implement a full YAML parser for inputs.
 
 
 
