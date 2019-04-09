@@ -18,7 +18,7 @@
 ### Sample Invocation
 
 ```
-interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=yes -maxRec=99 -loopDelay=5 -saveHtml=yes
+interpolate  -in=data/sample -out=out -glob=*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=yes -maxRec=99 -loopDelay=5 -saveHtml=yes
 ```
 
 ```
@@ -59,6 +59,13 @@ interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNa
          easily reload.  eg:  -loopDelay=30 will cause the system to 
          reprocess the input files once every 30 seconds. 
          When not set the system will run once and quit.
+  -recurseDir=yes - When set to yes the system will recursively walk
+         all directories contained in the -in directory and process
+		 every file that matches the glob patttern.  If not set will
+		 only walk the named directory.  When recurseDir is set to 
+		 yes then it will create directories in the output directory
+		 that mirror the input directory path whenever a matching input
+		 file is found.          
 ```
 
 * The command above assumes that you have built the interpolate executable as described in the build section below.   It also assumes that you have added the interpolate executable to the search path.
@@ -66,7 +73,7 @@ interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNa
 ### Save  version with markdown converted to HTML
 
 ```
-interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99 -saveHtml=yes
+interpolate  -in=data/sample -out=out -glob=*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99 -saveHtml=yes
 ```
 
 * Adding the -saveHtml=yes will cause the system to re-read the expanded markup and write a HTML version. 
@@ -75,7 +82,7 @@ interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNa
 ### Run in a Continuous Loop to support easy preview
 
 ```
-interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99 -saveHtml=yes -loopDelay=10
+interpolate  -in=data/sample -out=out -glob=*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99 -saveHtml=yes -loopDelay=10
 ```
 
 * Adding -loopDelay=10 will cause the system to process the files and then wait for 10 seconds before reprocessing the file.  This will cause the system to repeatedly regenerate the expanded markdown files.  If -saveHtml=yes is also set then it will also cause the system to regenerate generated html.

@@ -13,6 +13,7 @@ import (
 	"os"
 	//"path/filepath"
 	//m2h "mdtohtml"
+	"path"
 	"path/filepath"
 	"regexp"
 	s "strings"
@@ -35,6 +36,7 @@ type Interpolate struct {
 	varPaths     []string
 	saveHtml     bool
 	loopDelay    float32
+	recurseDir   bool
 }
 
 func makeInterpolator() *Interpolate {
@@ -270,6 +272,13 @@ func PrintHelp() {
 		 This is intended to keep a generated file available to 
 		 easily reload.  eg:  -loopDelay=30 will cause the system to 
 		 reprocess the input files once every 30 seconds.
+  -recurseDir=yes - When set to yes the system will recursively walk
+         all directories contained in the -in directory and process
+		 every file that matches the glob patttern.  If not set will
+		 only walk the named directory.  When recurseDir is set to 
+		 yes then it will create directories in the output directory
+		 that mirror the input directory path whenever a matching input
+		 file is found. 
 	-`)
 }
 
@@ -321,12 +330,47 @@ func (u *Interpolate) processDir(inDirName string, outDirName string) {
 		fmt.Println("L264: files=", files)
 		for _, fiPath := range files {
 
-			fmt.Println("L301:  fiPath=", fiPath)
+			fmt.Println("L333:  fiPath=", fiPath)
 			dir, fname := filepath.Split(fiPath)
-			fmt.Println("L271: fiPath=", fiPath, "dir=", dir, "fname=", fname)
+			fmt.Println("L335: fiPath=", fiPath, "dir=", dir, "fname=", fname)
 			outName := filepath.Join(outDirName, fname)
 			u.processFile(fiPath, outName)
 		}
+	}
+}
+
+func (u *Interpolate) processDirRecursive(inDir string, outDir string) {
+	inDirPref := path.Clean(inDir)
+	fmt.Println("L344: Recursive Directory Walk inDir=", inDir, "inDirClean=", inDirPref)
+	err := filepath.Walk(inDirPref,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if info.IsDir() == false {
+				// We are going to use our glob path semantics to process directories
+				// so we will skip
+				return nil
+			} else {
+				// It is a directory so compute it's position relative to
+				// our starting directory so we can compute our correct
+				// output directory.
+				//fmt.Println("L349: path=", path, "name=", info.Name(), " info=", info, " size=", info.Size())
+				pathRelToIn, err := filepath.Rel(inDirPref, path)
+				if err != nil {
+					fmt.Println("L362: Error finding relative path inDirPref=", inDirPref, " path=", path, " err=", err)
+				} else {
+					relOutDir := filepath.Join(outDir, pathRelToIn)
+					jutil.EnsurDir(relOutDir)
+					//fmt.Println("L359: pathRelToIn=", pathRelToIn, " relOutDir=", relOutDir)
+					u.processDir(path, relOutDir)
+				}
+			}
+			return nil
+		})
+	if err != nil {
+		fmt.Println("L365: processDirRecursive dir=", inDir, " err:", err)
 	}
 }
 
@@ -352,6 +396,7 @@ func main() {
 	u.baseDir = s.TrimSpace(parms.Sval("search", "data/data-dict/"))
 	u.saveHtml = parms.Bval("savehtml", false)
 	u.loopDelay = parms.Fval("loopdelay", -1)
+	u.recurseDir = parms.Bval("r", false)
 	jutil.EnsurDir(outName)
 	//fmt.Println("u=", u, "saveHtml=", u.saveHtml)
 
@@ -360,15 +405,19 @@ func main() {
 		os.Exit(3)
 	}
 
-	if u.loopDelay > 0 {
-		for {
+	for {
+		if u.recurseDir == false {
+			// process single file path
 			u.processDir(inName, outName)
 			jutil.Elap("L382: Finished Run", startms, jutil.Nowms())
-			time.Sleep(time.Duration(u.loopDelay) * time.Second)
-			startms = jutil.Nowms()
+		} else {
+			u.processDirRecursive(inName, outName)
 		}
-	} else {
-		u.processDir(inName, outName)
 		jutil.Elap("L382: Finished Run", startms, jutil.Nowms())
+		if u.loopDelay <= 0 {
+			break
+		}
+		time.Sleep(time.Duration(u.loopDelay) * time.Second)
+		startms = jutil.Nowms()
 	}
 }

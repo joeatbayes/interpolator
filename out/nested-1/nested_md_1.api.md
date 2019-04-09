@@ -1,25 +1,8 @@
-# Name Search
+# nested_md_1.api.md
 
-**path**: addrBook/search
+A sample Nested API to test recursive walk function.
 
-**sample uri**: http://namesearch.com/addrBook/search?fname=joe&lname=jackson&maxRec=389
-
-* **maxRec**=99
-* **fname**=  First name of person
-
-* **lname**=  Last Name of person stored in addressbook.table.person.lname in primary oracle database. 
-  Must Match legal name as shown on drivers license or passport. 
-  ```
-  { 'person' : 
-    {'lname' : 'myname' } 
-  }
-  ```
-
-* **Type**= string
-  **len**= 50
-
-
-## Sample Output
+## Sample of Predefined Object
 ```
   'person': {
     'lname': 'Jimbo',
@@ -36,6 +19,7 @@
 
 * **Colors** - List of colors for various items this person owns.  Used to help predict which color they will like when purchasing other items.
 
+
 ## Copyright
 
 
@@ -44,6 +28,5 @@
 MIT License: https://opensource.org/licenses/MIT
 
 Contact me on linkedin: https://www.linkedin.com/in/joe-ellsworth-68222/ if you want a great programmer.
-
 
 
