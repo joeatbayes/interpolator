@@ -199,7 +199,6 @@ Used to show the concept of a re-usable shared component.
 ## Sample Output
 
 * [Expanded Markdown](out/sample-api.md)  
-* [Expanded-html](out/sample-api.html)
 
 ![sample output](docs/sample_output.jpg)
 
