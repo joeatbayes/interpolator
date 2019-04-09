@@ -1,10 +1,12 @@
-# Up Next Approved
+# Actions & Feature Planning
+
+## Up Next Approved
 
 1. Add support example showing how to use primary and backup lookup varnames
 
    
 
-# Under Consideration:
+## Under Consideration:
 
 1. Add support for relative files by looking for ./ as first path segment.  When that is encountered use the  directory of the last read file rather than search as starting path.
 2. Add a notion to import specification such as + before actual text to allow specification of keeping path.   EG:  {*person/name#desc} would just substitute the label with path with the content of the person/name yml with desc field.  Where {*+*person/name#desc} would keep the label path and add it to the output.
@@ -18,7 +20,7 @@
 
 
 
-# DONE:
+## DONE:
 
 - 2018-04-08:JOE: Modify all sample commands in readme to properly reference -glob 
 - 2018-04-08:JOE: Add support for recursive walk of Dir Tree and generate new file with same name in relative tree in output. Implement file directory recursive walk for input.  Generate same output directory in the output directory.
