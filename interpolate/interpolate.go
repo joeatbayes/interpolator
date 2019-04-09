@@ -272,7 +272,7 @@ func PrintHelp() {
 		 This is intended to keep a generated file available to 
 		 easily reload.  eg:  -loopDelay=30 will cause the system to 
 		 reprocess the input files once every 30 seconds.
-  -recurseDir=yes - When set to yes the system will recursively walk
+  -r=yes - When set to yes the system will recursively walk
          all directories contained in the -in directory and process
 		 every file that matches the glob patttern.  If not set will
 		 only walk the named directory.  When recurseDir is set to 

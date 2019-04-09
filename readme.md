@@ -59,7 +59,7 @@ interpolate  -in=data/sample -out=out -glob=*.md -search=./data/data-dict  -VarN
          easily reload.  eg:  -loopDelay=30 will cause the system to 
          reprocess the input files once every 30 seconds. 
          When not set the system will run once and quit.
-  -recurseDir=yes - When set to yes the system will recursively walk
+  -r=yes - When set to yes the system will recursively walk
          all directories contained in the -in directory and process
 		 every file that matches the glob patttern.  If not set will
 		 only walk the named directory.  When recurseDir is set to 
