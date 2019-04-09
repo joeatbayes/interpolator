@@ -61,11 +61,11 @@ interpolate  -in=data/sample -out=out -glob=*.md -search=./data/data-dict  -VarN
          When not set the system will run once and quit.
   -r=yes - When set to yes the system will recursively walk
          all directories contained in the -in directory and process
-		 every file that matches the glob patttern.  If not set will
-		 only walk the named directory.  When recurseDir is set to 
-		 yes then it will create directories in the output directory
-		 that mirror the input directory path whenever a matching input
-		 file is found.          
+         every file that matches the glob pattern.  If not set will
+         only walk the named directory.  When recurseDir is set to 
+         yes then it will create directories in the output directory
+         that mirror the input directory path whenever a matching input
+         file is found.          
 ```
 
 * The command above assumes that you have built the interpolate executable as described in the build section below.   It also assumes that you have added the interpolate executable to the search path.
@@ -198,7 +198,8 @@ Used to show the concept of a re-usable shared component.
 
 ## Sample Output
 
-[Expanded Markdown](out/sample-api.md)  [expanded-html](out/sample-api.html)
+* [Expanded Markdown](out/sample-api.md)  
+* [Expanded-html](out/sample-api.html)
 
 ![sample output](docs/sample_output.jpg)
 
