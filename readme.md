@@ -251,3 +251,6 @@ go build -o interpolate-solaris-amd64 interpolate/interpolate.go
 
 * Note: The make-go-all-os.bat saves executables with custom names so they can co-exist in the same directory.   You will need to rename the proper one for the interpolate executable for the commands above to work.    
 
+Contributing
+
+* [actions](actions.md) A list of features planned under consideration & completed.
