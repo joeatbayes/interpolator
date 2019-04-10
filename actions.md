@@ -22,8 +22,9 @@
 
 ## DONE:
 
-- 2018-04-08:JOE: Modify all sample commands in readme to properly reference -glob 
-- 2018-04-08:JOE: Add support for recursive walk of Dir Tree and generate new file with same name in relative tree in output. Implement file directory recursive walk for input.  Generate same output directory in the output directory.
+- 2019-04-09:JOE: Fixed bug causing indention of leading space to be lost.  This caused improper indenting of bullets for resulting markup.
+- 2019-04-08:JOE: Modify all sample commands in readme to properly reference -glob 
+- 2019-04-08:JOE: Add support for recursive walk of Dir Tree and generate new file with same name in relative tree in output. Implement file directory recursive walk for input.  Generate same output directory in the output directory.
 - 2019-04-08:JOE: Fix keepVarnames so it works reliably and upgraded to work with yes or true on command line. 
 - 2019-04-07:JOE:  Add example better showing a shared component.
 - 2019-04-07:JOE: Fix the sample from lname.yml where it is not detecting end of pre-formatted markup

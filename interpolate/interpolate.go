@@ -74,7 +74,7 @@ func (r *Interpolate) GetFieldSingle(data []byte, specPath string) string {
 		return ""
 	} else {
 		_, end := m[0], m[1]
-		//fmt.Println("L213: rePatt=", rePatt, " parmErr=", parmErr, " start=", start, " end=", end)
+		//fmt.Println("L213: rePatt=", rePatt, " parmErr=", parmErr, " end=", end)
 		remaining := data[end:]
 		var sb []string
 		// accumulate line by line until
@@ -85,14 +85,15 @@ func (r *Interpolate) GetFieldSingle(data []byte, specPath string) string {
 			//fmt.Println("L222: mrest=", mrest, " tline=", string(tline))
 			if mrest == nil {
 				sb = append(sb, string(tline))
-				if len(tline) > 0 {
-					sb = append(sb, "\n")
-				}
 			} else {
 				break
 			}
 		}
-		return s.Join(sb, "")
+		if len(sb) > 1 {
+			return s.Join(sb, "\n")
+		} else {
+			return s.Join(sb, "")
+		}
 	}
 }
 
@@ -213,7 +214,6 @@ func (r *Interpolate) InterpolateStr(str string) string {
 					if keepVarNames {
 						sb = append(sb, varNameIncPath)
 					}
-
 					sb = append(sb, r.InterpolateStr(extractStr))
 				} else {
 					// Could not find a match so output default
@@ -301,7 +301,7 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 	//var b bytes.Buffer
 	for scanner.Scan() {
 		aline := scanner.Text()
-		aline = s.TrimSpace(aline)
+		//aline = s.TrimSpace(aline)
 		if len(aline) < 1 {
 			fmt.Fprintln(outFile, "")
 			continue
