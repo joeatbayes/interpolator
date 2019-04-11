@@ -2,21 +2,26 @@
 
 ## Up Next Approved
 
-1. Add support example showing how to use primary and backup lookup varnames
+1. Add feature to include the relative path from base input Directory as currPath so it can be interpolated into the document to show source document.   
 
-   
+2. Add support example showing how to use primary and backup lookup varnames
+
+3. Index all relative files including content by API into TSV file.    Then sort this file by file path referenced to deliver the list of all API docs consuming a given asset.  Then produce a Markdown file that shows this with links.
+
+    
 
 ## Under Consideration:
 
 1. Add support for relative files by looking for ./ as first path segment.  When that is encountered use the  directory of the last read file rather than search as starting path.
-2. Add a notion to import specification such as + before actual text to allow specification of keeping path.   EG:  {*person/name#desc} would just substitute the label with path with the content of the person/name yml with desc field.  Where {*+*person/name#desc} would keep the label path and add it to the output.
-3. Save a list of the markdown and html generated and save as a index page.
-4. Cache File names and timestamp changed and only re-read if the file date modified has changed.
-5. Modify to use the BlackFriday markdown generator more directly.  The current md to html tool is too large and slows down download.    When I tried it at first it did not produce what expected but I think it may be able to work with correct options and it is much smaller and more commonly used. 
-6. Add Cache of input files read as key values.
-7. Add Cache of full files plus var name segment 
-8. Implement a full YAML parser for inputs.
-9. Add support for inDir for comma separated list of names process in order received.
+2. Need a way to allow easy link back to source files in their original bitbucket or github source location.   When those files are from multiple source repositories need to include a mechanism to allow link back to correct source page in github.
+3. Add a notion to import specification such as + before actual text to allow specification of keeping path.   EG:  {*person/name#desc} would just substitute the label with path with the content of the person/name yml with desc field.  Where {*+*person/name#desc} would keep the label path and add it to the output.
+4. Save a list of the markdown and html generated and save as a index page.
+5. Cache File names and timestamp changed and only re-read if the file date modified has changed.
+6. Modify to use the BlackFriday markdown generator more directly.  The current md to html tool is too large and slows down download.    When I tried it at first it did not produce what expected but I think it may be able to work with correct options and it is much smaller and more commonly used. 
+7. Add Cache of input files read as key values.
+8. Add Cache of full files plus var name segment 
+9. Implement a full YAML parser for inputs.
+10. Add support for inDir for comma separated list of names process in order received.
 
 
 

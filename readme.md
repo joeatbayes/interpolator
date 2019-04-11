@@ -222,7 +222,27 @@ HINT: set GOTPATH= your current working directory.  Or set it to your desired ta
 git clone https://github.com/joeatbayes/interpolator interpolate
 ```
 
-### To Build for Multiple OS Linux / Windows / Mac 
+## Important Files
+
+* **Tools**
+  * **interpolate.exe** -  Main utility that implements provides the features described in this repository.  It is produced by makego.bat or makego.sh.  On MAC or Linux it will not include the .exe extension.
+  * **[yml2tsv](yml2tsv)** - A utility to ready the yml files used in the shared search path or data dictionary to TSV Tab delimited files.   It allows you to process any portion of the  directory tree and to choose which fields you want to have extracted. 
+* **Data**
+  * **[data/sample/sample-api.md](data/sample/sample-api.md)** - Main Sample input data used to drive basic tests of interpolate.exe
+  * **[data/datadict](data/datadict)** - Contains overall sample data dictionary used in samples for the -search path.  All interpolation values are resolved with the path specified in -search as the root path.
+  * **[data/datadict/db](data/datadict/db)** - A sub directory tree containing yml files that describe one column in the database.    Each yml file should follow a common field naming convention such as if you use "desc:" to provide the summary description for a column always use it to make interpolation paths easier.
+  * data/datadict/share -TODESCRIBE
+  * data/datadict/derived - TODESCRIBE
+* **Source** 
+  * **[interpolate/interpolate.go](interpolate/interpolate.go)** - Main implementation of the interpolator  functionality.
+* **Misc**
+  * **[actions.md](actions.md)** - A list of enhancements under consideration.
+
+
+
+
+
+## Build for Multiple OS Linux / Windows / Mac 
 
 [make-go-all-os.bat](make-go-all-os.bat): Batch file to build executable for multiple OS.  runs on windows 
 
