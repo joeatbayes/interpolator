@@ -1,0 +1,3 @@
+path	type	len	desc	tech_desc
+person\fname.yml	string	50	First name of person	
+person\lname.yml	string	50	Last Name of person	Last Name of person stored in addressbook.table.person.lname in primary oracle database.    Must Match legal name as shown on drivers license or passport.    ```   { 'person' :      {'lname' : 'myname' }    }   ```
