@@ -28,9 +28,9 @@ yml2csv  -in=../data/data-dict/db -out=tmp.tsv glob=*.yml  -vars=type,len,desc
 ## Example Output
 
 ```
-path    type    size    desc
-person\fname.yml        string          First name of person
-person\lname.yml        string          Last Name of person
+path    type    len     desc
+person\fname.yml        string  50      First name of person
+person\lname.yml        string  50      Last Name of person
 ```
 
 ## Example Output in Excel
