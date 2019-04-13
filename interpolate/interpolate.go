@@ -39,6 +39,9 @@ type Interpolate struct {
 	saveHtml     bool
 	loopDelay    float32
 	recurseDir   bool
+	crossRefFi   *os.File
+	currInFiName string
+	currFiFldUsg map[string]string
 }
 
 func makeInterpolator(parms *jutil.ParsedCommandArgs) *Interpolate {
@@ -50,6 +53,7 @@ func makeInterpolator(parms *jutil.ParsedCommandArgs) *Interpolate {
 	r.inName = parms.Sval("in", DefIn)
 	r.outName = parms.Sval("out", DefOut)
 	r.pargs = parms
+	r.currFiFldUsg = make(map[string]string)
 	r.glob = parms.Sval("glob", "*.md")
 	r.keepVarNames = parms.Bval("keepnames", false)
 	r.varPaths = s.Split(parms.Sval("varnames", "desc"), ",")
@@ -58,12 +62,24 @@ func makeInterpolator(parms *jutil.ParsedCommandArgs) *Interpolate {
 	r.loopDelay = parms.Fval("loopdelay", -1)
 	r.recurseDir = parms.Bval("r", false)
 	jutil.EnsurDir(r.outName)
+	r.makeCrossRefFi()
 
 	if jutil.IsDirectory(r.baseDir) == false {
 		fmt.Println("L191: FATAL ERROR: baseDir ", r.baseDir, " must be a directory")
 		os.Exit(3)
 	}
 	return &r
+}
+
+func (r *Interpolate) makeCrossRefFi() {
+	crossRefFiName := filepath.Join(r.outName, "usage_cross_ref.tsv")
+	fi, err := os.Create(crossRefFiName)
+	if err != nil {
+		fmt.Println("L64: Error opening cross ref file=", crossRefFiName, " err=", err)
+		os.Exit(2)
+	}
+	r.crossRefFi = fi
+	r.crossRefFi.WriteString("referenced\treferenced_by\n")
 }
 
 func (r *Interpolate) elapSec() float64 {
@@ -165,6 +181,8 @@ func (r *Interpolate) InterpolateStr(str string) string {
 		aMatchStr := s.ToLower(str[start:end])
 		varNameIncPath := " *(" + aMatchStr + ")* "
 		fmt.Printf("L64: matchStr=%s original=%s\n", aMatchStr, origStr)
+		tfa := s.Split(aMatchStr, "#")
+		r.currFiFldUsg[tfa[0]] = r.currInFiName
 		if s.HasPrefix(aMatchStr, "inc:") {
 			// Handle Include File
 			// Process simple file include
@@ -253,55 +271,6 @@ func (r *Interpolate) InterpolateStr(str string) string {
 	return s.Join(sb, "")
 }
 
-func PrintHelp() {
-	fmt.Println(
-		`interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99
-
-  -in = path to input directory containing files to process. 
-        Defaults to ./data
-  -out = path to output directory where expanded files will be
-         written.   defaults to ./out
-  -glob= glob pattern to use when selecting files to process in 
-         input directory.  Defaults to *.md
-  -search = Directory Base to search for files named in
-         interpolated parameters.
-  -varNames = Default variable name  matched in dictionary files.
-         Can be overridden if variable name is specified using 
-		 #varname semantic.    May be common separated list to 
-		 allow default lookup of backup fields such as look first 
-		 in tech_desc then in desc. -varNames=desc,tech_desc - 
-		 Causes the system to search first in the desc: field 
-		 then in the tech_desc.   This would use the business 
-		 description to be used first and then filled in tech 
-		 desc if desc is not found.   Just reverse the order to 
-		 cause it to use the technical description first. It 
-		 will use the first one found.   When the varname is 
-		 specified using the # semantic it will use the 
-		 specified var name and ignore the default varNames.
-  -keepNames = when set to true it will keep the supplied path as 
-         part of output text.   When not set or false will 
-		 replace content of path with content.
-  -saveHtml=yes when set to yes will convert the md file to Html
-         and save it in the output directory. 
-  -maxRec this is a variable defined on command line that is 
-         being interpolated.  Resolution of variables defined 
-		 on command line take precedence over those  resolved 
-		 in files. 
-  -loopDelay - When set the system will process the input.  
-         Sleep for a number of seconds and then re-process.
-		 This is intended to keep a generated file available to 
-		 easily reload.  eg:  -loopDelay=30 will cause the system to 
-		 reprocess the input files once every 30 seconds.
-  -r=yes - When set to yes the system will recursively walk
-         all directories contained in the -in directory and process
-		 every file that matches the glob patttern.  If not set will
-		 only walk the named directory.  When recurseDir is set to 
-		 yes then it will create directories in the output directory
-		 that mirror the input directory path whenever a matching input
-		 file is found. 
-	-`)
-}
-
 // Process a single input file
 func (u *Interpolate) processFile(inFiName string, outFiName string) {
 	inFile, err := os.Open(inFiName)
@@ -310,7 +279,7 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 		os.Exit(3)
 	}
 	defer inFile.Close()
-
+	u.currInFiName = inFiName
 	outFile, sferr := os.Create(outFiName)
 	if sferr != nil {
 		fmt.Println("L430: Can not open out file ", outFiName, " sferr=", sferr)
@@ -337,6 +306,14 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 	if u.saveHtml {
 		m2h.SaveAsHTML(outFiName, u.loopDelay)
 	}
+
+	// save references used in this file and setup for next file
+	for refUsed, useIn := range u.currFiFldUsg {
+		refUsed = s.TrimSpace(s.Replace(refUsed, "inc:", "", 1))
+		u.crossRefFi.WriteString(refUsed + "\t" + useIn + "\n")
+	}
+	u.currFiFldUsg = make(map[string]string)
+
 }
 
 // Process a single input file
@@ -394,6 +371,55 @@ func (u *Interpolate) processDirRecursive(inDir string, outDir string) {
 	}
 }
 
+func PrintHelp() {
+	fmt.Println(
+		`interpolate  -in=data -out=out glob=*sample*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=true -maxRec=99
+
+  -in = path to input directory containing files to process. 
+        Defaults to ./data
+  -out = path to output directory where expanded files will be
+         written.   defaults to ./out
+  -glob= glob pattern to use when selecting files to process in 
+         input directory.  Defaults to *.md
+  -search = Directory Base to search for files named in
+         interpolated parameters.
+  -varNames = Default variable name  matched in dictionary files.
+         Can be overridden if variable name is specified using 
+		 #varname semantic.    May be common separated list to 
+		 allow default lookup of backup fields such as look first 
+		 in tech_desc then in desc. -varNames=desc,tech_desc - 
+		 Causes the system to search first in the desc: field 
+		 then in the tech_desc.   This would use the business 
+		 description to be used first and then filled in tech 
+		 desc if desc is not found.   Just reverse the order to 
+		 cause it to use the technical description first. It 
+		 will use the first one found.   When the varname is 
+		 specified using the # semantic it will use the 
+		 specified var name and ignore the default varNames.
+  -keepNames = when set to true it will keep the supplied path as 
+         part of output text.   When not set or false will 
+		 replace content of path with content.
+  -saveHtml=yes when set to yes will convert the md file to Html
+         and save it in the output directory. 
+  -maxRec this is a variable defined on command line that is 
+         being interpolated.  Resolution of variables defined 
+		 on command line take precedence over those  resolved 
+		 in files. 
+  -loopDelay - When set the system will process the input.  
+         Sleep for a number of seconds and then re-process.
+		 This is intended to keep a generated file available to 
+		 easily reload.  eg:  -loopDelay=30 will cause the system to 
+		 reprocess the input files once every 30 seconds.
+  -r=yes - When set to yes the system will recursively walk
+         all directories contained in the -in directory and process
+		 every file that matches the glob patttern.  If not set will
+		 only walk the named directory.  When recurseDir is set to 
+		 yes then it will create directories in the output directory
+		 that mirror the input directory path whenever a matching input
+		 file is found. 
+	-`)
+}
+
 func main() {
 	startms := jutil.Nowms()
 
@@ -406,12 +432,11 @@ func main() {
 
 	u := makeInterpolator(parms)
 	//fmt.Println("OutName=", outName)
-
 	for {
+		u.makeCrossRefFi()
 		if u.recurseDir == false {
 			// process single file path
 			u.processDir(u.inName, u.outName)
-			jutil.Elap("L382: Finished Run", startms, jutil.Nowms())
 		} else {
 			u.processDirRecursive(u.inName, u.outName)
 		}
@@ -419,7 +444,9 @@ func main() {
 		if u.loopDelay <= 0 {
 			break
 		}
+		u.crossRefFi.Close()
 		time.Sleep(time.Duration(u.loopDelay) * time.Second)
 		startms = jutil.Nowms()
+
 	}
 }
