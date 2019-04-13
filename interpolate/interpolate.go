@@ -27,6 +27,8 @@ type Interpolate struct {
 	perf         *jutil.PerfMeasure
 	pargs        *jutil.ParsedCommandArgs
 	inPath       string
+	inName       string
+	outName      string
 	outPath      string
 	glob         string
 	processExt   string // file name extension to use when processing directories.
@@ -39,10 +41,28 @@ type Interpolate struct {
 	recurseDir   bool
 }
 
-func makeInterpolator() *Interpolate {
+func makeInterpolator(parms *jutil.ParsedCommandArgs) *Interpolate {
+	const DefIn = "data"
+	const DefOut = "out"
 	r := Interpolate{}
-	r.perf = jutil.MakePerfMeasure(25000)
 	r.start = jutil.Nowms()
+	r.perf = jutil.MakePerfMeasure(25000)
+	r.inName = parms.Sval("in", DefIn)
+	r.outName = parms.Sval("out", DefOut)
+	r.pargs = parms
+	r.glob = parms.Sval("glob", "*.md")
+	r.keepVarNames = parms.Bval("keepnames", false)
+	r.varPaths = s.Split(parms.Sval("varnames", "desc"), ",")
+	r.baseDir = s.TrimSpace(parms.Sval("search", "data/data-dict/"))
+	r.saveHtml = parms.Bval("savehtml", false)
+	r.loopDelay = parms.Fval("loopdelay", -1)
+	r.recurseDir = parms.Bval("r", false)
+	jutil.EnsurDir(r.outName)
+
+	if jutil.IsDirectory(r.baseDir) == false {
+		fmt.Println("L191: FATAL ERROR: baseDir ", r.baseDir, " must be a directory")
+		os.Exit(3)
+	}
 	return &r
 }
 
@@ -376,42 +396,24 @@ func (u *Interpolate) processDirRecursive(inDir string, outDir string) {
 
 func main() {
 	startms := jutil.Nowms()
-	const DefIn = "data"
-	const DefOut = "out"
+
 	parms := jutil.ParseCommandLine(os.Args)
 	if parms.Exists("help") {
 		PrintHelp()
 		return
 	}
 	fmt.Println(parms.String())
-	inName := parms.Sval("in", DefIn)
-	outName := parms.Sval("out", DefOut)
-	u := makeInterpolator()
+
+	u := makeInterpolator(parms)
 	//fmt.Println("OutName=", outName)
-
-	u.pargs = parms
-	u.glob = parms.Sval("glob", "*.md")
-	u.keepVarNames = parms.Bval("keepnames", false)
-	u.varPaths = s.Split(parms.Sval("varnames", "desc"), ",")
-	u.baseDir = s.TrimSpace(parms.Sval("search", "data/data-dict/"))
-	u.saveHtml = parms.Bval("savehtml", false)
-	u.loopDelay = parms.Fval("loopdelay", -1)
-	u.recurseDir = parms.Bval("r", false)
-	jutil.EnsurDir(outName)
-	//fmt.Println("u=", u, "saveHtml=", u.saveHtml)
-
-	if jutil.IsDirectory(u.baseDir) == false {
-		fmt.Println("L191: FATAL ERROR: baseDir ", u.baseDir, " must be a directory")
-		os.Exit(3)
-	}
 
 	for {
 		if u.recurseDir == false {
 			// process single file path
-			u.processDir(inName, outName)
+			u.processDir(u.inName, u.outName)
 			jutil.Elap("L382: Finished Run", startms, jutil.Nowms())
 		} else {
-			u.processDirRecursive(inName, outName)
+			u.processDirRecursive(u.inName, u.outName)
 		}
 		jutil.Elap("L382: Finished Run", startms, jutil.Nowms())
 		if u.loopDelay <= 0 {
