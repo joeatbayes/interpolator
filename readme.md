@@ -66,6 +66,10 @@ interpolate  -in=data/sample -out=out -glob=*.md -search=./data/data-dict  -VarN
          yes then it will create directories in the output directory
          that mirror the input directory path whenever a matching input
          file is found.          
+  -makeCrossRef=yes - when set to yes the system will generate a
+     .md file and a sorted file containing contents of files 
+     referencing a specific data dictionary item.  Defaults to false.
+     
 ```
 
 * The command above assumes that you have built the interpolate executable as described in the build section below.   It also assumes that you have added the interpolate executable to the search path.
@@ -279,3 +283,16 @@ go build -o interpolate-solaris-amd64 interpolate/interpolate.go
 * Please  [file an issue](https://github.com/joeatbayes/interpolator/issues) for Enhancements.  I have been known to buy lunch for people who submit particularly good enhancement requests or who find interesting flaws.
 * Feel free to Fork and submit pull requests.
 * See: [actions](actions.md) for a list of features planned under consideration & completed.
+
+
+
+
+
+| Header Fld | Used By    |
+| ---------- | ---------- |
+| abc        | api/defg   |
+|            | api/mpeg   |
+|            | api/mangle |
+| abx        | api/mgap   |
+| aby        | api/killer |
+

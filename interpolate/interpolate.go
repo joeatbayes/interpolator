@@ -16,6 +16,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"sort"
 	s "strings"
 	"time"
 
@@ -24,24 +25,25 @@ import (
 )
 
 type Interpolate struct {
-	perf         *jutil.PerfMeasure
-	pargs        *jutil.ParsedCommandArgs
-	inPath       string
-	inName       string
-	outName      string
-	outPath      string
-	glob         string
-	processExt   string // file name extension to use when processing directories.
-	start        float64
-	keepVarNames bool
-	baseDir      string
-	varPaths     []string
-	saveHtml     bool
-	loopDelay    float32
-	recurseDir   bool
-	crossRefFi   *os.File
-	currInFiName string
-	currFiFldUsg map[string]string
+	perf           *jutil.PerfMeasure
+	pargs          *jutil.ParsedCommandArgs
+	inPath         string
+	inName         string
+	outName        string
+	outPath        string
+	glob           string
+	processExt     string // file name extension to use when processing directories.
+	start          float64
+	keepVarNames   bool
+	baseDir        string
+	varPaths       []string
+	saveHtml       bool
+	loopDelay      float32
+	recurseDir     bool
+	crossRefFiName string
+	crossRefFi     *os.File
+	currInFiName   string
+	currFiFldUsg   map[string]string
 }
 
 func makeInterpolator(parms *jutil.ParsedCommandArgs) *Interpolate {
@@ -72,10 +74,10 @@ func makeInterpolator(parms *jutil.ParsedCommandArgs) *Interpolate {
 }
 
 func (r *Interpolate) makeCrossRefFi() {
-	crossRefFiName := filepath.Join(r.outName, "usage_cross_ref.tsv")
-	fi, err := os.Create(crossRefFiName)
+	r.crossRefFiName = filepath.Join(r.outName, "usage_cross_ref.tsv")
+	fi, err := os.Create(r.crossRefFiName)
 	if err != nil {
-		fmt.Println("L64: Error opening cross ref file=", crossRefFiName, " err=", err)
+		fmt.Println("L64: Error opening cross ref file=", r.crossRefFiName, " err=", err)
 		os.Exit(2)
 	}
 	r.crossRefFi = fi
@@ -290,7 +292,6 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 	//var b bytes.Buffer
 	for scanner.Scan() {
 		aline := scanner.Text()
-		//aline = s.TrimSpace(aline)
 		if len(aline) < 1 {
 			fmt.Fprintln(outFile, "")
 			continue
@@ -313,7 +314,6 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 		u.crossRefFi.WriteString(refUsed + "\t" + useIn + "\n")
 	}
 	u.currFiFldUsg = make(map[string]string)
-
 }
 
 // Process a single input file
@@ -417,7 +417,135 @@ func PrintHelp() {
 		 yes then it will create directories in the output directory
 		 that mirror the input directory path whenever a matching input
 		 file is found. 
+  -makeCrossRef=yes - when set to yes the system will generate a .md file
+         and a sorted file containing contents of files referencing a 
+		 specific data dictionary item.  Defaults to false.
 	-`)
+}
+
+/* Load a text file into slice of strings
+Return the first line as header and an slice
+containing the strings.  Supresses empty lines
+And lines beginning with # */
+func LoadFileWithHeader(inFiName string) (string, []string) {
+	fmt.Println("L428: LoadFileWithHeader inFiName=", inFiName)
+	start := jutil.Nowms()
+	tarr := make([]string, 0, 1000)
+	inFile, err := os.Open(inFiName)
+	if err != nil {
+		fmt.Println("L432: ERROR: loadFi ", inFiName, " err=", err)
+		return "", nil
+	}
+	defer inFile.Close()
+	scanner := bufio.NewScanner(inFile)
+	lineCnt := 0
+	scanner.Scan()
+	headers := scanner.Text()
+	for scanner.Scan() {
+		aline := scanner.Text()
+		lineCnt++
+		if len(aline) <= 0 {
+			continue
+		}
+		aline = s.TrimSpace(aline)
+		if s.HasPrefix(aline, "#") {
+			continue
+		}
+		tarr = append(tarr, aline)
+		fmt.Println("L450 aline=", aline)
+	}
+	jutil.Elap("L452: loadFi "+inFiName, start, jutil.Nowms())
+	return headers, tarr
+}
+
+/* Open a File containing a single line of header
+   and and a set of strings.  Sort the strings and
+   write a new file containing the same header line
+   and all the strings */
+//func sortFileWithHeader(inFiName string, outFiName string) (string, string[]) {
+
+func sortFileWithHeader(inFiName string, outFiName string) (string, []string) {
+
+	headers, tarr := LoadFileWithHeader(inFiName)
+	fmt.Println("tarr=", tarr)
+	sort.Strings(tarr)
+	fmt.Println("tarr=", tarr)
+	fi, err := os.Create(outFiName)
+	if err != nil {
+		fmt.Println("L471: Error opening output sort file=", outFiName, " err=", err)
+		os.Exit(2)
+	}
+	defer fi.Close()
+	fmt.Println("L475: sortFileWithHeader inFiName=", inFiName, " outFiName=", outFiName, " #Rec=", len(tarr))
+	fi.WriteString(headers)
+	fi.WriteString("\n")
+	for _, aline := range tarr {
+		fmt.Println("L478: aline=", aline)
+		fi.WriteString(aline)
+		fi.WriteString("\n")
+	}
+	fi.Sync()
+
+	return headers, tarr
+}
+
+func PadRightFixed(tstr string, targLen int, padChar string) string {
+	numPad := targLen - len(tstr)
+	if numPad <= 0 {
+		return tstr // tstr[0:targLen]
+	} else {
+		var b s.Builder
+		b.WriteString(tstr)
+		for i := 0; i < numPad; i++ {
+			b.WriteString(padChar)
+		}
+		return b.String()
+	}
+} // func
+
+const tableColLen = 50
+
+func makeCrossRef(inFiName string, outFiName string) {
+	srtFiName := s.Replace(inFiName, ".tsv", ".srt.tsv", 1)
+	headers, tarr := sortFileWithHeader(inFiName, srtFiName)
+	outFi, err := os.Create(outFiName)
+	if err != nil {
+		fmt.Println("L64: Error opening makeCrossRef file=", outFiName, " err=", err)
+		os.Exit(2)
+	}
+	defer outFi.Close()
+	fmt.Println("L511:  infiName=", inFiName, " outFiName=", outFiName, "srtFiName=", srtFiName, "#Rec=", len(tarr))
+
+	currFld := ""
+	headSegArr := s.SplitN(headers, "\t", 2)
+
+	seg1Pad := PadRightFixed(headSegArr[0], tableColLen, " ")
+	seg2Pad := PadRightFixed(headSegArr[1], tableColLen, " ")
+	outFi.WriteString("|" + seg1Pad + "|" + seg2Pad + "|\n")
+
+	dashes := PadRightFixed("-", tableColLen, "-")
+	spaces := PadRightFixed(" ", tableColLen, " ")
+	outFi.WriteString("|" + dashes + " | " + dashes + " |\n")
+
+	for _, aline := range tarr {
+
+		fldArr := s.SplitN(aline, "\t", 2)
+		fmt.Println("aline=", aline, " fldArr=", fldArr)
+		fldRef := s.TrimSpace(fldArr[0])
+		refBy := s.TrimSpace(fldArr[1])
+		if fldRef > " " && refBy > " " {
+			fldRefPad := PadRightFixed(fldRef, tableColLen, " ")
+			refByPad := PadRightFixed(fldRef, tableColLen, " ")
+			if fldRef != currFld {
+				outFi.WriteString("|" + fldRefPad + "|" + refByPad + "|\n")
+				currFld = fldRef
+			} else {
+				outFi.WriteString("|" + spaces + " |" + refBy + "|\n")
+			}
+		}
+	}
+	outFi.WriteString("\n")
+	outFi.Sync()
 }
 
 func main() {
@@ -441,12 +569,20 @@ func main() {
 			u.processDirRecursive(u.inName, u.outName)
 		}
 		jutil.Elap("L382: Finished Run", startms, jutil.Nowms())
+
+		if parms.Bval("makecrossref", false) {
+			u.crossRefFi.Close()
+			crossMDOut := s.Replace(u.crossRefFiName, ".tsv", ".md", 1)
+			fmt.Println("crossMDOut=", crossMDOut)
+			makeCrossRef(u.crossRefFiName, crossMDOut)
+		}
 		if u.loopDelay <= 0 {
 			break
+		} else {
+			time.Sleep(time.Duration(u.loopDelay) * time.Second)
+			startms = jutil.Nowms()
+			u.makeCrossRefFi()
 		}
-		u.crossRefFi.Close()
-		time.Sleep(time.Duration(u.loopDelay) * time.Second)
-		startms = jutil.Nowms()
 
 	}
 }
