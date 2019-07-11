@@ -1,7 +1,7 @@
-name: fname
+name: lname
 domain: addressbook
 table: person
-desc: First name of person
-tech_desc: 
+desc:
+tech_desc:
 type: string
 len: 50

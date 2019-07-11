@@ -18,7 +18,19 @@
 ### Sample Invocation
 
 ```
-interpolate  -in=data/sample -out=out -glob=*.md -search=./data/data-dict  -VarNames=desc,tech_desc  -keepNames=yes -maxRec=99 -loopDelay=5 -saveHtml=yes
+interpolate  -in=data/sample -out=out -glob=*.md -search=./data/data-dict  -VarNames=desc,domain  -keepNames=yes -maxRec=99 -loopDelay=5 -saveHtml=yes
+```
+
+### Sample Invocation with multiple search directory inputs
+
+```
+interpolate  -in=data/sample -out=out -glob=*.md -search=./data/data-dict,./data/api-com  -VarNames=desc,domain  -keepNames=yes -maxRec=99 -loopDelay=5 -saveHtml=yes
+```
+
+### Sample Invocation with 3 VarNames inputs (which doesn't work)
+
+```
+interpolate  -in=data/sample -out=out -glob=*.md -search=./data/data-dict  -VarNames=desc,tech_desc,table  -keepNames=yes -maxRec=99 -loopDelay=5 -saveHtml=yes
 ```
 
 ```

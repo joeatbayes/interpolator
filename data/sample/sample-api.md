@@ -6,6 +6,7 @@
 
 * **maxRec**={*maxRec}
 * **fname**= {*db/person/fname}
+* **mname**= {*db/person/mname}
 * **lname**= {*db/person/lname#tech_desc}
   * **Type**={*db/person/lname#type}
   * ***len**={*db/person/lname#len}
