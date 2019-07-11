@@ -1,0 +1,23 @@
+# Binaries for programs and plugins
+xx*.exe
+interpolate.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+*.out.txt
+*.log.txt
+pkg*
+*/src/github.com/*
+*/src/golang.org
+*/src/gopkg.in
+xxinterpolate-darwin-386
+xxinterpolate-linux-386
+interpolate-solaris-amd64
+xxinterpolate-windows-386
