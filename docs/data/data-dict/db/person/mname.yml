@@ -1,7 +1,0 @@
-name: lname
-domain: addressbook
-table: person
-desc:
-tech_desc:
-type: string
-len: 50

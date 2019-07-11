@@ -1,3 +1,0 @@
-path	type	len	desc
-person\fname.yml	string	50	First name of person
-person\lname.yml	string	50	Last Name of person

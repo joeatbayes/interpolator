@@ -1,7 +1,0 @@
-name: fname
-domain: addressbook
-table: person
-desc: First name of person
-tech_desc: 
-type: string
-len: 50
