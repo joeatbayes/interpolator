@@ -5,10 +5,12 @@ package main
 import (
 	"bufio"
 	"bytes"
+
 	//"bytes"
 	//"encoding/json"
 	"fmt"
 	"io/ioutil"
+
 	//"net/http"
 	"os"
 	//"path/filepath"
@@ -35,7 +37,7 @@ type Interpolate struct {
 	processExt     string // file name extension to use when processing directories.
 	start          float64
 	keepVarNames   bool
-	baseDir        string
+	searchDirs     []string // Renamed from baseDir to searchDirs. Also changed type from string to array of strings
 	varPaths       []string
 	saveHtml       bool
 	loopDelay      float32
@@ -59,16 +61,18 @@ func makeInterpolator(parms *jutil.ParsedCommandArgs) *Interpolate {
 	r.glob = parms.Sval("glob", "*.md")
 	r.keepVarNames = parms.Bval("keepnames", false)
 	r.varPaths = s.Split(parms.Sval("varnames", "desc"), ",")
-	r.baseDir = s.TrimSpace(parms.Sval("search", "data/data-dict/"))
+	r.searchDirs = s.Split(s.TrimSpace(parms.Sval("search", "data/data-dict/")), ",") // Use strings.Split to make the search directories into an array
 	r.saveHtml = parms.Bval("savehtml", false)
 	r.loopDelay = parms.Fval("loopdelay", -1)
 	r.recurseDir = parms.Bval("r", false)
 	jutil.EnsurDir(r.outName)
 	r.makeCrossRefFi()
 
-	if jutil.IsDirectory(r.baseDir) == false {
-		fmt.Println("L191: FATAL ERROR: baseDir ", r.baseDir, " must be a directory")
-		os.Exit(3)
+	for _, direct := range r.searchDirs { // Changed this to make it a loop to check if each search directory exists
+		if jutil.IsDirectory(direct) == false {
+			fmt.Println("L73: FATAL ERROR: searchDir ", direct, " must be a directory")
+			os.Exit(3)
+		}
 	}
 	return &r
 }
@@ -77,7 +81,7 @@ func (r *Interpolate) makeCrossRefFi() {
 	r.crossRefFiName = filepath.Join(r.outName, "usage_cross_ref.tsv")
 	fi, err := os.Create(r.crossRefFiName)
 	if err != nil {
-		fmt.Println("L64: Error opening cross ref file=", r.crossRefFiName, " err=", err)
+		fmt.Println("L84: Error opening cross ref file=", r.crossRefFiName, " err=", err)
 		os.Exit(2)
 	}
 	r.crossRefFi = fi
@@ -104,15 +108,15 @@ func (r *Interpolate) GetFieldSingle(data []byte, specPath string) string {
 	rePatt := `\s*?` + specPath + `\:`
 	lookPat, parmErr := regexp.Compile(rePatt)
 	if parmErr != nil {
-		fmt.Println("L205: pattern  error: specPath=", specPath, " rePatt=", rePatt, " parmErr=", parmErr, " data=\n", string(data), "\n\n")
+		fmt.Println("L111: pattern  error: specPath=", specPath, " rePatt=", rePatt, " parmErr=", parmErr, " data=\n", string(data), "\n\n")
 	}
 	m := lookPat.FindIndex([]byte(data))
-	//fmt.Println("L208: specPath=", specPath, " rePatt=", rePatt, " parmErr=", parmErr, " m=", m, " data=\n", string(data), "\n\n")
+	//fmt.Println("L114: specPath=", specPath, " rePatt=", rePatt, " parmErr=", parmErr, " m=", m, " data=\n", string(data), "\n\n")
 	if m == nil {
 		return ""
 	} else {
 		_, end := m[0], m[1]
-		//fmt.Println("L213: rePatt=", rePatt, " parmErr=", parmErr, " end=", end)
+		//fmt.Println("L119: rePatt=", rePatt, " parmErr=", parmErr, " end=", end)
 		remaining := data[end:]
 		var sb []string
 		// accumulate line by line until
@@ -120,7 +124,7 @@ func (r *Interpolate) GetFieldSingle(data []byte, specPath string) string {
 		restArr := bytes.Split(remaining, nlByteArr)
 		for _, tline := range restArr {
 			mrest := MatchAnyTag.FindIndex(tline)
-			//fmt.Println("L222: mrest=", mrest, " tline=", string(tline))
+			//fmt.Println("127: mrest=", mrest, " tline=", string(tline))
 			if mrest == nil {
 				sb = append(sb, string(tline))
 			} else {
@@ -157,16 +161,18 @@ func (r *Interpolate) GetField(data []byte, specPath string, defPaths []string) 
 	return " "
 }
 
-func (r *Interpolate) InterpolateStr(str string) string {
-	//fmt.Println("L246: Interpolate atr=", str)
+func (r *Interpolate) InterpolateStr(str string, direct string) (string, bool) {
+	// Added an input paramater (string) for the search file path (to replace r.baseDir), and output paramater (bool) to say if we are writing to the output file
+	//fmt.Println("166: Interpolate atr=", str)
 	if len(str) < 3 || str < " " {
-		return str
+		return str, true
 	}
 	ms := ParmMatch.FindAllIndex([]byte(str), -1)
 	if len(ms) < 1 {
-		return str // no match found
+		return str, true // no match found
 	}
 
+	writing := false // Created variable to say if we need to write sb to the file
 	//sb := strings.Builder
 	var sb []string
 	last := 0
@@ -182,36 +188,13 @@ func (r *Interpolate) InterpolateStr(str string) string {
 		}
 		aMatchStr := s.ToLower(str[start:end])
 		varNameIncPath := " *(" + aMatchStr + ")* "
-		fmt.Printf("L64: matchStr=%s original=%s\n", aMatchStr, origStr)
+		fmt.Printf("191: matchStr=%s original=%s\n", aMatchStr, origStr)
 		tfa := s.Split(aMatchStr, "#")
 		r.currFiFldUsg[tfa[0]] = r.currInFiName
 		if s.HasPrefix(aMatchStr, "inc:") {
-			// Handle Include File
-			// Process simple file include
-			//fmt.Println("L69:found inc: prefix")
-			matchPort := s.TrimSpace(aMatchStr[4:])
-			tpath := filepath.Join(r.baseDir, matchPort)
-			//fmt.Println("L71: matchPort=", matchPort, " tpath=", tpath)
-			if jutil.Exists(tpath) {
-				data, err := ioutil.ReadFile(tpath)
-				if err != nil {
-					//fmt.Println("Error reading ", tpath, " err=", err)
-					// could not read file so copy original path
-					// into output file
-					sb = append(sb, origStr)
-				} else {
-					// save file read into our output buffer
-					//fmt.Println("L137 Add file from buffer data=\n", string(data), "\n\n")
-					if keepVarNames {
-						sb = append(sb, varNameIncPath)
-						sb = append(sb, " \n")
-					}
-					sb = append(sb, r.InterpolateStr(string(data)))
-				}
-			} else {
-				sb = append(sb, origStr)
-				// file to include not located.
-			}
+			newSb, flag := r.handleInclude(aMatchStr, sb, origStr, varNameIncPath, direct) // Took the chunk of code in here and made it a separate function: handleInclude
+			writing = flag
+			sb = newSb
 
 		} else if s.HasPrefix(aMatchStr, "http:") || s.HasPrefix(aMatchStr, "https:") {
 			// Process as a URI to read
@@ -223,45 +206,17 @@ func (r *Interpolate) InterpolateStr(str string) string {
 			// TODO: Add lookup from enviornment variable
 			//  if do not find it in the command line parms
 			lookVal := r.pargs.Sval(aMatchStr, origStr) // "{*"+aMatchStr+"}")
-			//fmt.Printf("L99: matchStr=%s  lookVal=%s\n", aMatchStr, lookVal)
+			fmt.Printf("L209: matchStr=%s  lookVal=%s\n", aMatchStr, lookVal)
 			if keepVarNames {
 				sb = append(sb, varNameIncPath)
 			}
-			sb = append(sb, r.InterpolateStr(lookVal))
+			interp, _ := r.InterpolateStr(lookVal, direct) // Changed this line to accomadate changes to InterpolateStr inputs and outputs
+			sb = append(sb, interp)
 
 		} else {
-			// Try read file and parse out the requested variable name
-			varSpecPath := ""
-			pathFrag := s.SplitN(aMatchStr, "#", 2)
-			basicPath := s.TrimSpace(pathFrag[0])
-			if len(pathFrag) == 2 {
-				varSpecPath = pathFrag[1]
-			}
-			tpath := filepath.Join(r.baseDir, basicPath) + ".yml"
-			tpath = s.Replace(tpath, ".yml.yml", ".yml", 1)
-			data, err := ioutil.ReadFile(tpath)
-			//fmt.Println("L158: fname=", tpath, "data=", string(data))
-			if err != nil {
-				fmt.Println("L160: Error reading ", tpath, " err=", err)
-				// could not read file so copy original path
-				// into output file
-				sb = append(sb, origStr)
-				sb = append(sb, " *FILE NOT FOUND "+tpath+" *")
-			} else {
-				// save file read into our output buffer
-				extractStr := r.GetField(data, varSpecPath, r.varPaths)
-				if extractStr > " " {
-					if keepVarNames {
-						sb = append(sb, varNameIncPath)
-					}
-					sb = append(sb, r.InterpolateStr(extractStr))
-				} else {
-					// Could not find a match so output default
-					sb = append(sb, origStr)
-					sb = append(sb, " *VARIABLE NOT FOUND* ")
-				}
-			}
-			//sb = append(sb, aMatchStr)
+			newSb, flag := r.readParse(aMatchStr, sb, origStr, varNameIncPath, direct) // Took the chunk of code in here and made it a separate function: readParse
+			writing = flag
+			sb = newSb
 		}
 		last = end + 1
 	}
@@ -270,21 +225,136 @@ func (r *Interpolate) InterpolateStr(str string) string {
 		// end of the last match
 		sb = append(sb, str[last:slen])
 	}
-	return s.Join(sb, "")
+	joinedSb := s.Join(sb, "")
+	return s.ReplaceAll(joinedSb, " \\n", "<BR>"), writing
+}
+
+func (r *Interpolate) handleInclude(aMatchStr string, sb []string, origStr string, varNameIncPath string, direct string) ([]string, bool) {
+	// Handle Include File
+	// Process simple file include
+	//fmt.Println("L234:found inc: prefix")
+	matchPort := s.TrimSpace(aMatchStr[4:])
+	matchPort = r.mergePaths(direct, matchPort) // Added function to merge two file paths for specificity if desired
+	tpath := filepath.Join(direct, matchPort)
+	flag := false // Created flag to say if we need to write sb to the file
+	//fmt.Println("L238: matchPort=", matchPort, " tpath=", tpath)
+	if jutil.Exists(tpath) {
+		data, err := ioutil.ReadFile(tpath)
+		if err != nil {
+			//fmt.Println("Error reading ", tpath, " err=", err)
+			// could not read file so copy original path
+			// into output file
+			sb = append(sb, origStr)
+		} else {
+			// save file read into our output buffer
+			//fmt.Println("L248: Add file from buffer data=\n", string(data), "\n\n")
+			flag = true // If successfully reads the file at the specified path, we want to write to the output file
+			if r.keepVarNames {
+				sb = append(sb, varNameIncPath)
+				sb = append(sb, " \n")
+			}
+			interp, _ := r.InterpolateStr(string(data), direct) // Changed this line to accomadate changes to InterpolateStr inputs and outputs
+			sb = append(sb, interp)
+		}
+	} else {
+		sb = append(sb, origStr)
+		// file to include not located.
+	}
+	return sb, flag
+}
+
+func (r *Interpolate) readParse(aMatchStr string, sb []string, origStr string, varNameIncPath string, direct string) ([]string, bool) {
+	// Try read file and parse out the requested variable name
+	varSpecPath := ""
+	pathFrag := s.SplitN(aMatchStr, "#", 2)
+	basicPath := s.TrimSpace(pathFrag[0])
+	if len(pathFrag) == 2 {
+		varSpecPath = pathFrag[1]
+	}
+	basicPath = r.mergePaths(direct, basicPath) // Added function to merge two file paths
+	tpath := filepath.Join(direct, basicPath) + ".yml"
+	tpath = s.Replace(tpath, ".yml.yml", ".yml", 1)
+	data, err := ioutil.ReadFile(tpath)
+	flag := false // Flag to say if we are going to write the string to the output file
+	// fmt.Println("L313: fname=", tpath, "data=", string(data))
+	if err != nil {
+		fmt.Println("L315: Error reading ", tpath, " err=", err)
+		// could not read file so copy original path
+		// into output file
+		sb = append(sb, origStr)
+		sb = append(sb, " *FILE NOT FOUND "+tpath+" *")
+	} else {
+		flag = true // If the file is found, set the writing flag to true
+		// save file read into our output buffer
+		extractStr := r.GetField(data, varSpecPath, r.varPaths)
+		if extractStr > " " {
+			if r.keepVarNames {
+				sb = append(sb, varNameIncPath)
+			}
+			interp, _ := r.InterpolateStr(extractStr, direct) // Changed this line to accomadate changes to InterpolateStr inputs and outputs
+			sb = append(sb, interp)
+		} else {
+			// Could not find a match so output default
+			sb = append(sb, origStr)
+			sb = append(sb, " *VARIABLE NOT FOUND* ")
+		}
+	}
+	//sb = append(sb, aMatchStr)
+	return sb, flag
+}
+
+func (r *Interpolate) mergePaths(direct string, basicPath string) string {
+	frontSplit := s.Split(direct, "\\")  // Splits the search directory into an array of folders
+	backSplit := s.Split(basicPath, "/") // Splits the path to the .yml file into an array of folders
+	specific := false                    // Flag to say if the search directory contains part of the basicPath
+	i := len(frontSplit) - 1             // iterator int for frontSplit
+	j := 0                               // iterator int for backSplit
+	for i >= 0 {
+		if frontSplit[i] == backSplit[j] {
+			specific = true // If the least specific folder in backSplit is found in frontSplit, we want to see if the file path continues to be the same
+			break
+		}
+		i--
+	}
+	if specific {
+		i++
+		j++
+		for i < len(frontSplit) { // Continue seeing if the next specific folders are the same in both arrays
+			if j >= len(backSplit) {
+				specific = false // If the search directory is more specific than even the yml file location, then we won't change anything
+				break
+			}
+			if frontSplit[i] != backSplit[j] {
+				specific = false // If the yml file location is in a different folder than the search directory, don't change anything
+				break
+			}
+			i++
+			j++
+		}
+	}
+	if specific { // This will be true if the end of frontSplit is the same as the beginning of backSplit
+		lenstr := 0
+		for k := 0; k < j; k++ {
+			lenstr = lenstr + len(backSplit[k]) // Add up the length of all the strings at the beginning of backSplit that are the same as the end of frontSplit
+			lenstr++                            // Add one for each slash
+		}
+		basicPath = basicPath[lenstr:] // Cut off the beginning of basicPath (yml location) so it can be found by joining it with search directory
+	}
+	return basicPath
 }
 
 // Process a single input file
 func (u *Interpolate) processFile(inFiName string, outFiName string) {
 	inFile, err := os.Open(inFiName)
 	if err != nil {
-		fmt.Println("L423: error opening input file ", inFiName, " err=", err)
+		fmt.Println("L344: error opening input file ", inFiName, " err=", err)
 		os.Exit(3)
 	}
 	defer inFile.Close()
 	u.currInFiName = inFiName
 	outFile, sferr := os.Create(outFiName)
 	if sferr != nil {
-		fmt.Println("L430: Can not open out file ", outFiName, " sferr=", sferr)
+		fmt.Println("L351: Can not open out file ", outFiName, " sferr=", sferr)
 		os.Exit(3)
 	}
 
@@ -296,10 +366,15 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 			fmt.Fprintln(outFile, "")
 			continue
 		} else {
-			outStr := u.InterpolateStr(aline)
-			//fmt.Println("L444: outStr=", outStr)
-			outFile.WriteString(outStr)
-			fmt.Fprintln(outFile, "")
+			for searchDex, direct := range u.searchDirs { // Added this for loop to go through each search directory every time we reach a new line
+				outStr, writing := u.InterpolateStr(aline, direct) // Changed this line to accomadate changes to InterpolateStr inputs and outputs
+				//fmt.Println("L365: outStr=", outStr)
+				if writing || searchDex == len(u.searchDirs)-1 {
+					outFile.WriteString(outStr) // Changed to only write to the output file if we find the file (writing flag is set to true), or we are on the last search directory
+					fmt.Fprintln(outFile, "")
+					break
+				}
+			}
 		}
 	}
 	outFile.Sync()
@@ -319,17 +394,17 @@ func (u *Interpolate) processFile(inFiName string, outFiName string) {
 // Process a single input file
 func (u *Interpolate) processDir(inDirName string, outDirName string) {
 	globPath := inDirName + "/*" + u.glob
-	fmt.Println("L259: globPath=", globPath)
+	fmt.Println("L391: globPath=", globPath)
 	files, err := filepath.Glob(globPath)
 	if err != nil {
-		fmt.Println("L289: ERROR processsing dir=", inDirName, " outDir=", outDirName, "globPath=", globPath, " err=", err)
+		fmt.Println("L394: ERROR processsing dir=", inDirName, " outDir=", outDirName, "globPath=", globPath, " err=", err)
 	} else {
-		fmt.Println("L264: files=", files)
+		fmt.Println("L396: files=", files)
 		for _, fiPath := range files {
 
-			fmt.Println("L333:  fiPath=", fiPath)
+			fmt.Println("L399:  fiPath=", fiPath)
 			dir, fname := filepath.Split(fiPath)
-			fmt.Println("L335: fiPath=", fiPath, "dir=", dir, "fname=", fname)
+			fmt.Println("L401: fiPath=", fiPath, "dir=", dir, "fname=", fname)
 			outName := filepath.Join(outDirName, fname)
 			u.processFile(fiPath, outName)
 		}
@@ -338,7 +413,7 @@ func (u *Interpolate) processDir(inDirName string, outDirName string) {
 
 func (u *Interpolate) processDirRecursive(inDir string, outDir string) {
 	inDirPref := path.Clean(inDir)
-	fmt.Println("L344: Recursive Directory Walk inDir=", inDir, "inDirClean=", inDirPref)
+	fmt.Println("L410: Recursive Directory Walk inDir=", inDir, "inDirClean=", inDirPref)
 	err := filepath.Walk(inDirPref,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -353,21 +428,21 @@ func (u *Interpolate) processDirRecursive(inDir string, outDir string) {
 				// It is a directory so compute it's position relative to
 				// our starting directory so we can compute our correct
 				// output directory.
-				//fmt.Println("L349: path=", path, "name=", info.Name(), " info=", info, " size=", info.Size())
+				//fmt.Println("L425: path=", path, "name=", info.Name(), " info=", info, " size=", info.Size())
 				pathRelToIn, err := filepath.Rel(inDirPref, path)
 				if err != nil {
-					fmt.Println("L362: Error finding relative path inDirPref=", inDirPref, " path=", path, " err=", err)
+					fmt.Println("L428: Error finding relative path inDirPref=", inDirPref, " path=", path, " err=", err)
 				} else {
 					relOutDir := filepath.Join(outDir, pathRelToIn)
 					jutil.EnsurDir(relOutDir)
-					//fmt.Println("L359: pathRelToIn=", pathRelToIn, " relOutDir=", relOutDir)
+					//fmt.Println("L432: pathRelToIn=", pathRelToIn, " relOutDir=", relOutDir)
 					u.processDir(path, relOutDir)
 				}
 			}
 			return nil
 		})
 	if err != nil {
-		fmt.Println("L365: processDirRecursive dir=", inDir, " err:", err)
+		fmt.Println("L439: processDirRecursive dir=", inDir, " err:", err)
 	}
 }
 
@@ -428,12 +503,12 @@ Return the first line as header and an slice
 containing the strings.  Supresses empty lines
 And lines beginning with # */
 func LoadFileWithHeader(inFiName string) (string, []string) {
-	fmt.Println("L428: LoadFileWithHeader inFiName=", inFiName)
+	fmt.Println("L500: LoadFileWithHeader inFiName=", inFiName)
 	start := jutil.Nowms()
 	tarr := make([]string, 0, 1000)
 	inFile, err := os.Open(inFiName)
 	if err != nil {
-		fmt.Println("L432: ERROR: loadFi ", inFiName, " err=", err)
+		fmt.Println("L505: ERROR: loadFi ", inFiName, " err=", err)
 		return "", nil
 	}
 	defer inFile.Close()
@@ -452,9 +527,9 @@ func LoadFileWithHeader(inFiName string) (string, []string) {
 			continue
 		}
 		tarr = append(tarr, aline)
-		fmt.Println("L450 aline=", aline)
+		fmt.Println("L524 aline=", aline)
 	}
-	jutil.Elap("L452: loadFi "+inFiName, start, jutil.Nowms())
+	jutil.Elap("L526: loadFi "+inFiName, start, jutil.Nowms())
 	return headers, tarr
 }
 
@@ -472,15 +547,15 @@ func sortFileWithHeader(inFiName string, outFiName string) (string, []string) {
 	fmt.Println("tarr=", tarr)
 	fi, err := os.Create(outFiName)
 	if err != nil {
-		fmt.Println("L471: Error opening output sort file=", outFiName, " err=", err)
+		fmt.Println("L544: Error opening output sort file=", outFiName, " err=", err)
 		os.Exit(2)
 	}
 	defer fi.Close()
-	fmt.Println("L475: sortFileWithHeader inFiName=", inFiName, " outFiName=", outFiName, " #Rec=", len(tarr))
+	fmt.Println("L548: sortFileWithHeader inFiName=", inFiName, " outFiName=", outFiName, " #Rec=", len(tarr))
 	fi.WriteString(headers)
 	fi.WriteString("\n")
 	for _, aline := range tarr {
-		fmt.Println("L478: aline=", aline)
+		fmt.Println("L552: aline=", aline)
 		fi.WriteString(aline)
 		fi.WriteString("\n")
 	}
@@ -510,11 +585,11 @@ func makeCrossRef(inFiName string, outFiName string) {
 	headers, tarr := sortFileWithHeader(inFiName, srtFiName)
 	outFi, err := os.Create(outFiName)
 	if err != nil {
-		fmt.Println("L64: Error opening makeCrossRef file=", outFiName, " err=", err)
+		fmt.Println("L582: Error opening makeCrossRef file=", outFiName, " err=", err)
 		os.Exit(2)
 	}
 	defer outFi.Close()
-	fmt.Println("L511:  infiName=", inFiName, " outFiName=", outFiName, "srtFiName=", srtFiName, "#Rec=", len(tarr))
+	fmt.Println("L586:  infiName=", inFiName, " outFiName=", outFiName, "srtFiName=", srtFiName, "#Rec=", len(tarr))
 
 	currFld := ""
 	headSegArr := s.SplitN(headers, "\t", 2)
@@ -557,7 +632,6 @@ func main() {
 		return
 	}
 	fmt.Println(parms.String())
-
 	u := makeInterpolator(parms)
 	//fmt.Println("OutName=", outName)
 	for {
